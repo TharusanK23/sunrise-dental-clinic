@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Details - Sunrise Dental Clinic</title>
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-sunrise no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand navbar-brand-custom" href="dashboard.html">Sunrise Dental Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="appointments.html">Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="dentists.html">Dentists</a></li>
+                <li class="nav-item"><a class="nav-link" href="treatment-types.html">Treatment Types</a></li>
+                <li class="nav-item"><a class="nav-link" href="patients.html">Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="reports.html">Reports</a></li>
+                <li class="nav-item" data-role-admin-only><a class="nav-link" href="users.html">Staff Accounts</a></li>
+                <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+            </ul>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item text-white-50 small me-lg-3"><span id="navUserName"></span> (<span id="navUserRole"></span>)</li>
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container px-4 py-4">
+    <a href="appointments.html" class="btn btn-sm btn-outline-secondary mb-3 no-print">&larr; Back to Appointments</a>
+    <div id="alertBox"></div>
+
+    <div class="card p-4" id="detailCard" style="display:none;">
+        <div class="d-flex justify-content-between align-items-start flex-wrap">
+            <div>
+                <h1 class="h4 section-title mb-1" id="apptNumber"></h1>
+                <span class="badge bg-secondary status-badge" id="apptStatus"></span>
+            </div>
+            <div class="btn-group mt-2 mt-md-0 no-print">
+                <a class="btn btn-brand" id="generateBillBtn" href="#">Generate / View Bill</a>
+                <button class="btn btn-outline-success" id="completeBtn">Mark Completed</button>
+                <button class="btn btn-outline-danger" id="cancelBtn">Cancel Appointment</button>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h2 class="h6 section-title">Patient</h2>
+                <dl class="row mb-0">
+                    <dt class="col-5">Name</dt><dd class="col-7" id="patName"></dd>
+                    <dt class="col-5">Address</dt><dd class="col-7" id="patAddress"></dd>
+                    <dt class="col-5">Contact No.</dt><dd class="col-7" id="patContact"></dd>
+                    <dt class="col-5">Email</dt><dd class="col-7" id="patEmail"></dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h2 class="h6 section-title">Dentist &amp; Treatment</h2>
+                <dl class="row mb-0">
+                    <dt class="col-5">Dentist</dt><dd class="col-7" id="dentistName"></dd>
+                    <dt class="col-5">Specialization</dt><dd class="col-7" id="dentistSpec"></dd>
+                    <dt class="col-5">Treatment</dt><dd class="col-7" id="treatmentName"></dd>
+                    <dt class="col-5">Consultation Fee</dt><dd class="col-7" id="consultationFee"></dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h2 class="h6 section-title">Schedule</h2>
+                <dl class="row mb-0">
+                    <dt class="col-5">Date / Time</dt><dd class="col-7" id="scheduleInfo"></dd>
+                    <dt class="col-5">Notes</dt><dd class="col-7" id="notesInfo"></dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h2 class="h6 section-title">Booking Meta</h2>
+                <dl class="row mb-0">
+                    <dt class="col-5">Booked By</dt><dd class="col-7" id="createdBy"></dd>
+                    <dt class="col-5">Booked On</dt><dd class="col-7" id="createdAt"></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/appointment-detail.js"></script>
+</body>
+</html>

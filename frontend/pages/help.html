@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help - Sunrise Dental Clinic</title>
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-sunrise no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand navbar-brand-custom" href="dashboard.html">Sunrise Dental Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="appointments.html">Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="dentists.html">Dentists</a></li>
+                <li class="nav-item"><a class="nav-link" href="treatment-types.html">Treatment Types</a></li>
+                <li class="nav-item"><a class="nav-link" href="patients.html">Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="reports.html">Reports</a></li>
+                <li class="nav-item" data-role-admin-only><a class="nav-link" href="users.html">Staff Accounts</a></li>
+                <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+            </ul>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item text-white-50 small me-lg-3"><span id="navUserName"></span> (<span id="navUserRole"></span>)</li>
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container px-4 py-4">
+    <h1 class="h4 section-title mb-1">Help &amp; Getting Started</h1>
+    <p class="text-muted mb-4">Step-by-step instructions for new staff, served live from <code>GET /api/help</code>.</p>
+    <div id="alertBox"></div>
+
+    <div id="stepsContainer" class="d-flex flex-column gap-3"></div>
+</main>
+
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+    (async () => {
+        const user = await requireAuth();
+        if (!user) return;
+        try {
+            const steps = await Api.get("/help");
+            document.getElementById("stepsContainer").innerHTML = steps.map(s => `
+                <div class="card p-3">
+                    <div class="d-flex gap-3 help-step">
+                        <div class="step-number">${s.step}</div>
+                        <div>
+                            <h2 class="h6 mb-1">${s.title}</h2>
+                            <p class="mb-0 text-muted">${s.description}</p>
+                        </div>
+                    </div>
+                </div>`).join("");
+        } catch (err) {
+            showAlert("alertBox", "Could not load the help content from the API.");
+        }
+    })();
+</script>
+</body>
+</html>

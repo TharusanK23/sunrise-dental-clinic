@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sunrise Dental Clinic</title>
+    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="auth-shell">
+
+<div class="card auth-card">
+    <div class="card-body p-5">
+        <div class="text-center mb-4">
+            <h1 class="h3 section-title mb-1">Sunrise Dental Clinic</h1>
+            <p class="text-muted mb-0">Online Appointment &amp; Patient Management System</p>
+            <p class="text-muted small">Staff Login</p>
+        </div>
+
+        <div id="alertBox"></div>
+
+        <form id="loginForm" novalidate>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" autocomplete="username" required>
+                <div class="field-error" id="err-username"></div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+                <div class="field-error" id="err-password"></div>
+            </div>
+            <button type="submit" class="btn btn-brand w-100" id="loginBtn">Sign In</button>
+        </form>
+
+        <hr class="my-4">
+        <p class="small text-muted mb-1"><strong>Demo accounts</strong> (see database/schema.sql seed data):</p>
+        <ul class="small text-muted mb-0">
+            <li>Administrator: <code>admin</code> / <code>admin123</code></li>
+            <li>Staff: <code>nadeesha</code> / <code>Nadeesha@123</code></li>
+        </ul>
+    </div>
+</div>
+
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+    // If already logged in, skip straight to the dashboard.
+    (async () => {
+        try {
+            await Api.get("/auth/me");
+            window.location.href = "pages/dashboard.html";
+        } catch (e) { /* not logged in - stay on this page */ }
+    })();
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearAlert("alertBox");
+        document.getElementById("err-username").textContent = "";
+        document.getElementById("err-password").textContent = "";
+
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const btn = document.getElementById("loginBtn");
+        btn.disabled = true;
+        btn.textContent = "Signing in...";
+
+        try {
+            await Api.post("/auth/login", { username, password });
+            window.location.href = "pages/dashboard.html";
+        } catch (err) {
+            if (err.status === 400 && err.body && err.body.validationErrors) {
+                const fe = err.body.validationErrors;
+                if (fe.username) document.getElementById("err-username").textContent = fe.username;
+                if (fe.password) document.getElementById("err-password").textContent = fe.password;
+            } else if (err.status === 401) {
+                showAlert("alertBox", "Invalid username or password. Please try again.");
+            } else {
+                showAlert("alertBox", "Unable to reach the server. Please make sure the backend API is running on " + API_BASE + ".");
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Sign In";
+        }
+    });
+</script>
+</body>
+</html>

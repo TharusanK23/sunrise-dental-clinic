@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments - Sunrise Dental Clinic</title>
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-sunrise no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand navbar-brand-custom" href="dashboard.html">Sunrise Dental Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="appointments.html">Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="dentists.html">Dentists</a></li>
+                <li class="nav-item"><a class="nav-link" href="treatment-types.html">Treatment Types</a></li>
+                <li class="nav-item"><a class="nav-link" href="patients.html">Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="reports.html">Reports</a></li>
+                <li class="nav-item" data-role-admin-only><a class="nav-link" href="users.html">Staff Accounts</a></li>
+                <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+            </ul>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item text-white-50 small me-lg-3"><span id="navUserName"></span> (<span id="navUserRole"></span>)</li>
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 section-title mb-0">Appointments</h1>
+        <button class="btn btn-brand" id="toggleFormBtn">+ New Appointment</button>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <!-- "Display Appointment Details": search an existing appointment by its number -->
+    <div class="card p-3 mb-4">
+        <h2 class="h6 section-title">Find an Appointment</h2>
+        <form id="searchForm" class="row g-2">
+            <div class="col-sm-6 col-md-4">
+                <input type="text" class="form-control" id="searchNumber" placeholder="e.g. APT-2026-000001" required>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-brand">Search</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- "Register New Appointment" -->
+    <div class="card p-3 mb-4 d-none" id="newAppointmentCard">
+        <h2 class="h6 section-title">Register New Appointment</h2>
+        <div id="formAlert"></div>
+        <form id="appointmentForm" novalidate>
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="btn-group" role="group" aria-label="Patient type">
+                        <input type="radio" class="btn-check" name="patientMode" id="modeNew" value="new" checked>
+                        <label class="btn btn-outline-brand btn-sm" for="modeNew">New Patient</label>
+                        <input type="radio" class="btn-check" name="patientMode" id="modeExisting" value="existing">
+                        <label class="btn btn-outline-brand btn-sm" for="modeExisting">Existing Patient</label>
+                    </div>
+                </div>
+
+                <div class="col-12" id="existingPatientBlock" style="display:none;">
+                    <label class="form-label">Select Patient</label>
+                    <select class="form-select" id="patientSelect"></select>
+                </div>
+
+                <div id="newPatientBlock" class="col-12 row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="patientFullName">
+                        <div class="field-error" id="err-patientFullName"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Address</label>
+                        <input type="text" class="form-control" id="patientAddress">
+                        <div class="field-error" id="err-patientAddress"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" class="form-control" id="patientContactNumber" placeholder="0771234567">
+                        <div class="field-error" id="err-patientContactNumber"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email (optional)</label>
+                        <input type="email" class="form-control" id="patientEmail">
+                        <div class="field-error" id="err-patientEmail"></div>
+                    </div>
+                </div>
+
+                <div class="col-12"><hr></div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Treatment Type</label>
+                    <select class="form-select" id="treatmentTypeSelect"></select>
+                    <div class="field-error" id="err-treatmentTypeId"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Appointment Date</label>
+                    <input type="date" class="form-control" id="appointmentDate">
+                    <div class="field-error" id="err-appointmentDate"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Appointment Time</label>
+                    <input type="time" class="form-control" id="appointmentTime" value="09:00">
+                    <div class="field-error" id="err-appointmentTime"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="button" class="btn btn-outline-brand w-100" id="checkAvailabilityBtn">Check Available Dentists</button>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Available Dentist</label>
+                    <select class="form-select" id="dentistSelect" required>
+                        <option value="">-- Check availability first --</option>
+                    </select>
+                    <div class="field-error" id="err-dentistId"></div>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Notes (optional)</label>
+                    <textarea class="form-control" id="notes" rows="2"></textarea>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-brand" id="submitAppointmentBtn">Save Appointment</button>
+                    <button type="button" class="btn btn-outline-secondary" id="cancelFormBtn">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card p-3">
+        <h2 class="h6 section-title">All Appointments</h2>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr><th>Appointment No.</th><th>Patient</th><th>Dentist</th><th>Treatment</th><th>Date / Time</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody id="appointmentsBody"><tr><td colspan="7" class="text-muted">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/appointments.js"></script>
+</body>
+</html>

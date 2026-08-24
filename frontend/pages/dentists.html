@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentists - Sunrise Dental Clinic</title>
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-sunrise no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand navbar-brand-custom" href="dashboard.html">Sunrise Dental Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="appointments.html">Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="dentists.html">Dentists</a></li>
+                <li class="nav-item"><a class="nav-link" href="treatment-types.html">Treatment Types</a></li>
+                <li class="nav-item"><a class="nav-link" href="patients.html">Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="reports.html">Reports</a></li>
+                <li class="nav-item" data-role-admin-only><a class="nav-link" href="users.html">Staff Accounts</a></li>
+                <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+            </ul>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item text-white-50 small me-lg-3"><span id="navUserName"></span> (<span id="navUserRole"></span>)</li>
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container-fluid px-4 py-4">
+    <h1 class="h4 section-title mb-3">Dentists</h1>
+    <div id="alertBox"></div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card p-3">
+                <h2 class="h6 section-title">All Dentists</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead><tr><th>Name</th><th>Specialization</th><th>Contact</th><th>Status</th><th></th></tr></thead>
+                        <tbody id="dentistsBody"><tr><td colspan="5" class="text-muted">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card p-3">
+                <h2 class="h6 section-title">Add Dentist</h2>
+                <div id="dentistFormAlert"></div>
+                <form id="dentistForm">
+                    <div class="mb-2">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="fullName" placeholder="e.g. Silva" required>
+                        <div class="field-error" id="err-fullName"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Specialization</label>
+                        <input type="text" class="form-control" id="specialization" placeholder="General Dentistry" required>
+                        <div class="field-error" id="err-specialization"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Contact Number (optional)</label>
+                        <input type="text" class="form-control" id="contactNumber">
+                        <div class="field-error" id="err-contactNumber"></div>
+                    </div>
+                    <button type="submit" class="btn btn-brand w-100">Add Dentist</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/dentists.js"></script>
+</body>
+</html>

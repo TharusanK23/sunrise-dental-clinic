@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sunrise Dental Clinic</title>
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-sunrise no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand navbar-brand-custom" href="dashboard.html">Sunrise Dental Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="appointments.html">Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="dentists.html">Dentists</a></li>
+                <li class="nav-item"><a class="nav-link" href="treatment-types.html">Treatment Types</a></li>
+                <li class="nav-item"><a class="nav-link" href="patients.html">Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="reports.html">Reports</a></li>
+                <li class="nav-item" data-role-admin-only><a class="nav-link" href="users.html">Staff Accounts</a></li>
+                <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+            </ul>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item text-white-50 small me-lg-3"><span id="navUserName"></span> (<span id="navUserRole"></span>)</li>
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container-fluid px-4 py-4">
+    <h1 class="h4 section-title mb-4">Dashboard</h1>
+    <div id="alertBox"></div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-kpi p-3">
+                <div class="kpi-label">Total Dentists</div>
+                <div class="kpi-value" id="kpiTotalDentists">-</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-kpi p-3">
+                <div class="kpi-label">Available Dentists</div>
+                <div class="kpi-value" id="kpiAvailableDentists">-</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-kpi p-3">
+                <div class="kpi-label">Active Appointments</div>
+                <div class="kpi-value" id="kpiActiveAppointments">-</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-kpi p-3">
+                <div class="kpi-label">Today's Appointments</div>
+                <div class="kpi-value" id="kpiTodaysAppointments">-</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-kpi p-3">
+                <div class="kpi-label">Total Patients</div>
+                <div class="kpi-value" id="kpiTotalPatients">-</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-kpi p-3">
+                <div class="kpi-label">Total Revenue Billed</div>
+                <div class="kpi-value" id="kpiTotalRevenue">-</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-kpi p-3">
+                <div class="kpi-label">Unpaid Amount</div>
+                <div class="kpi-value text-danger" id="kpiUnpaidAmount">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h2 class="h6 section-title">Quick Actions</h2>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="appointments.html?new=1" class="btn btn-brand">+ New Appointment</a>
+                    <a href="appointments.html" class="btn btn-outline-brand">Search Appointment</a>
+                    <a href="reports.html" class="btn btn-outline-brand">View Reports</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h2 class="h6 section-title">Recent Appointments</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead><tr><th>No.</th><th>Patient</th><th>Dentist</th><th>Status</th></tr></thead>
+                        <tbody id="recentAppointmentsBody"><tr><td colspan="4" class="text-muted">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/dashboard.js"></script>
+</body>
+</html>

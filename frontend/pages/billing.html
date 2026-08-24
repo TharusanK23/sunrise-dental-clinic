@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill / Receipt - Sunrise Dental Clinic</title>
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-sunrise no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand navbar-brand-custom" href="dashboard.html">Sunrise Dental Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="appointments.html">Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="dentists.html">Dentists</a></li>
+                <li class="nav-item"><a class="nav-link" href="treatment-types.html">Treatment Types</a></li>
+                <li class="nav-item"><a class="nav-link" href="patients.html">Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="reports.html">Reports</a></li>
+                <li class="nav-item" data-role-admin-only><a class="nav-link" href="users.html">Staff Accounts</a></li>
+                <li class="nav-item"><a class="nav-link" href="help.html">Help</a></li>
+            </ul>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item text-white-50 small me-lg-3"><span id="navUserName"></span> (<span id="navUserRole"></span>)</li>
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container px-4 py-4">
+    <a href="appointments.html" class="btn btn-sm btn-outline-secondary mb-3 no-print">&larr; Back to Appointments</a>
+    <div id="alertBox"></div>
+
+    <div class="receipt-box" id="receiptBox" style="display:none;">
+        <div class="text-center mb-4">
+            <h1 class="h4 section-title mb-0">Sunrise Dental Clinic</h1>
+            <p class="text-muted mb-0">45 Lake Road, Nugegoda, Sri Lanka | Tel: 011-2765432</p>
+            <h2 class="h6 mt-3">CONSULTATION INVOICE</h2>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-6">
+                <strong>Bill No:</strong> <span id="billNumber"></span><br>
+                <strong>Appointment No:</strong> <span id="apptNumber"></span><br>
+                <strong>Date Issued:</strong> <span id="generatedAt"></span>
+            </div>
+            <div class="col-6 text-md-end">
+                <strong>Payment Status:</strong> <span id="paymentStatus" class="badge status-badge"></span><br>
+                <strong>Pricing Rule Applied:</strong> <span id="pricingStrategy"></span>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h3 class="h6">Billed To</h3>
+                <div id="patientBlock"></div>
+            </div>
+            <div class="col-md-6">
+                <h3 class="h6">Treatment</h3>
+                <div id="treatmentBlock"></div>
+            </div>
+        </div>
+
+        <table class="table table-sm">
+            <thead><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
+            <tbody>
+            <tr><td>Consultation fee</td><td class="text-end" id="subtotal"></td></tr>
+            <tr><td>Weekend surcharge</td><td class="text-end" id="surcharge"></td></tr>
+            <tr><td>Loyalty discount</td><td class="text-end text-success" id="discount"></td></tr>
+            <tr><td>Government tax</td><td class="text-end" id="tax"></td></tr>
+            </tbody>
+            <tfoot>
+            <tr class="border-top">
+                <td class="receipt-total">TOTAL PAYABLE</td>
+                <td class="text-end receipt-total" id="total"></td>
+            </tr>
+            </tfoot>
+        </table>
+
+        <p class="text-muted small text-center mt-4 mb-0">Thank you for choosing Sunrise Dental Clinic. This receipt was generated automatically by the Online Appointment &amp; Patient Management System.</p>
+
+        <div class="text-center mt-4 no-print">
+            <button class="btn btn-brand" onclick="window.print()">Print Receipt</button>
+            <button class="btn btn-outline-brand" id="settleBtn">Mark as Paid</button>
+        </div>
+    </div>
+</main>
+
+<script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/billing.js"></script>
+</body>
+</html>
