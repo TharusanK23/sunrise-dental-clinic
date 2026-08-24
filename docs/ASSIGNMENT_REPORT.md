@@ -788,8 +788,6 @@ full backend, tests, frontend, diagrams and documentation were in place and
 green — see the repository's commit history and branch list for the
 current state).
 
-<!-- SCREENSHOT-PENDING: github-repo.png, github-branches.png, github-actions.png -->
-
 ![GitHub repository - file tree, README, commit history](../testing/screenshots/11-github-repo.png)
 
 ![GitHub Actions - Backend CI run history](../testing/screenshots/13-github-actions.png)
