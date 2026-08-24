@@ -1,0 +1,65 @@
+%% Sequence Diagram 3 - Calculate and Print Bill
+sequenceDiagram
+    actor Staff as Staff Member
+    participant UI as Billing Page<br/>(billing.html)
+    participant Ctrl as BillController
+    participant Svc as BillServiceImpl
+    participant ApptRepo as AppointmentRepository
+    participant BillRepo as BillRepository
+    participant Factory as BillFactory
+    participant PC as PricingContext
+    participant Strat as PricingStrategy<br/>(Standard / Weekend / Loyalty)
+    participant NumGen as AppointmentNumberGenerator<br/>(Singleton)
+    participant Publisher as AppointmentEventPublisher
+    participant DB as MySQL
+
+    Staff->>UI: click "Generate Bill" on an appointment
+    UI->>Ctrl: GET /api/bills/appointment/{appointmentNumber}
+    Ctrl->>Svc: generateOrFetch(appointmentNumber)
+
+    Svc->>ApptRepo: findByAppointmentNumber(appointmentNumber)
+    ApptRepo->>DB: SELECT * FROM appointments WHERE appointment_number = ?
+    DB-->>ApptRepo: Appointment row
+    ApptRepo-->>Svc: Appointment
+
+    Svc->>BillRepo: findByAppointmentId(appointment.id)
+    BillRepo->>DB: SELECT * FROM bills WHERE appointment_id = ?
+
+    alt bill already generated
+        DB-->>BillRepo: existing bill row
+        BillRepo-->>Svc: Bill (figures unchanged)
+    else no bill yet
+        DB-->>BillRepo: (none)
+        BillRepo-->>Svc: empty
+
+        Svc->>Factory: create(appointment)
+        Factory->>ApptRepo: countCompletedByPatient(patient.id)
+        ApptRepo->>DB: SELECT COUNT(*) FROM appointments<br/>WHERE patient_id = ? AND status = 'COMPLETED'
+        DB-->>ApptRepo: priorVisits
+        ApptRepo-->>Factory: long priorVisits
+
+        Factory->>PC: price(consultationFee, priorVisits, appointmentDate)
+        PC->>PC: resolveStrategy(priorVisits, appointmentDate)
+        Note over PC,Strat: priorVisits 5 or more: LoyaltyDiscount<br/>else Sat/Sun: WeekendSurcharge<br/>else: Standard
+        PC->>Strat: calculate(consultationFee, priorVisits, appointmentDate)
+        Strat-->>PC: PricingResult (subtotal, surcharge,<br/>discount, tax, total, strategyName)
+        PC-->>Factory: PricingResult
+
+        Factory->>NumGen: billNumberFor(appointmentNumber)
+        NumGen-->>Factory: "INV-2026-000123"
+        Factory-->>Svc: Bill (unsaved)
+
+        Svc->>BillRepo: save(bill)
+        BillRepo->>DB: INSERT INTO bills
+        DB-->>BillRepo: saved Bill
+        BillRepo-->>Svc: Bill
+
+        Svc->>Publisher: publish(AppointmentEvent(BILL_GENERATED))
+        Publisher->>Publisher: notify EmailNotificationObserver,<br/>SmsNotificationObserver, AuditLogObserver
+    end
+
+    Svc-->>Ctrl: BillResponse
+    Ctrl-->>UI: 200 OK {billNumber, subtotal, surchargeAmount,<br/>discountAmount, taxAmount, totalAmount, ...}
+    UI-->>Staff: render printable receipt
+    Staff->>UI: click "Print Receipt"
+    UI-->>Staff: browser print dialog / save as PDF

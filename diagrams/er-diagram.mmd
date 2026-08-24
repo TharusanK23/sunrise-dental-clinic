@@ -1,0 +1,82 @@
+%% Sunrise Dental Clinic - Entity Relationship Diagram
+erDiagram
+    USERS {
+        bigint id PK
+        varchar username UK
+        varchar password
+        varchar full_name
+        varchar email
+        varchar role
+        tinyint enabled
+        datetime created_at
+    }
+
+    PATIENTS {
+        bigint id PK
+        varchar full_name
+        varchar address
+        varchar contact_number
+        varchar email
+        date date_of_birth
+        datetime created_at
+    }
+
+    TREATMENT_TYPES {
+        bigint id PK
+        varchar treatment_name UK
+        decimal consultation_fee
+        varchar description
+    }
+
+    DENTISTS {
+        bigint id PK
+        varchar full_name
+        varchar specialization
+        varchar contact_number
+        varchar status
+    }
+
+    APPOINTMENTS {
+        bigint id PK
+        varchar appointment_number UK
+        bigint patient_id FK
+        bigint dentist_id FK
+        bigint treatment_type_id FK
+        date appointment_date
+        time appointment_time
+        varchar status
+        varchar notes
+        bigint created_by FK
+        datetime created_at
+    }
+
+    BILLS {
+        bigint id PK
+        varchar bill_number UK
+        bigint appointment_id FK
+        decimal consultation_fee
+        decimal subtotal
+        decimal surcharge_amount
+        decimal discount_amount
+        decimal tax_amount
+        decimal total_amount
+        varchar pricing_strategy
+        varchar payment_status
+        varchar payment_method
+        datetime generated_at
+    }
+
+    NOTIFICATION_LOGS {
+        bigint id PK
+        varchar appointment_number
+        varchar channel
+        varchar message
+        datetime sent_at
+    }
+
+    PATIENTS ||--o{ APPOINTMENTS : books
+    DENTISTS ||--o{ APPOINTMENTS : attends
+    TREATMENT_TYPES ||--o{ APPOINTMENTS : classifies
+    USERS ||--o{ APPOINTMENTS : "creates (created_by)"
+    APPOINTMENTS ||--o| BILLS : generates
+    APPOINTMENTS |o..o{ NOTIFICATION_LOGS : "raises (by appointment_number)"

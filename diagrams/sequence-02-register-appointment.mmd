@@ -1,0 +1,68 @@
+%% Sequence Diagram 2 - Register New Appointment
+sequenceDiagram
+    actor Staff as Staff Member
+    participant UI as Appointment Form<br/>(appointment-new.html)
+    participant Ctrl as AppointmentController
+    participant Svc as AppointmentServiceImpl
+    participant PatRepo as PatientRepository
+    participant DenRepo as DentistRepository
+    participant TTRepo as TreatmentTypeRepository
+    participant ApptRepo as AppointmentRepository
+    participant Builder as AppointmentBuilder
+    participant NumGen as AppointmentNumberGenerator<br/>(Singleton)
+    participant Publisher as AppointmentEventPublisher
+    participant DB as MySQL
+
+    Staff->>UI: select/enter patient, dentist,<br/>treatment type, date & time, click "Save"
+    UI->>Ctrl: POST /api/appointments {payload}
+    Ctrl->>Svc: register(request, "nadeesha")
+
+    Svc->>PatRepo: findById(patientId) OR save(new Patient)
+    PatRepo->>DB: SELECT / INSERT INTO patients
+    DB-->>PatRepo: Patient row
+    PatRepo-->>Svc: Patient
+
+    Svc->>DenRepo: findById(dentistId)
+    DenRepo->>DB: SELECT * FROM dentists WHERE id = ?
+    DB-->>DenRepo: Dentist row
+    DenRepo-->>Svc: Dentist
+
+    alt dentist is ON_LEAVE or INACTIVE
+        Svc-->>Ctrl: throw BusinessRuleException
+        Ctrl-->>UI: 409 Conflict {"not available"}
+        UI-->>Staff: show "Dentist is not available"
+    else dentist available
+        Svc->>TTRepo: findById(treatmentTypeId)
+        TTRepo->>DB: SELECT * FROM treatment_types WHERE id = ?
+        DB-->>TTRepo: TreatmentType row
+        TTRepo-->>Svc: TreatmentType
+
+        Svc->>ApptRepo: findConflictingForDentist(dentistId, date, time)
+        ApptRepo->>DB: SELECT * FROM appointments WHERE ... (same slot)
+        DB-->>ApptRepo: matching rows
+
+        alt dentist already booked at that exact date/time
+            ApptRepo-->>Svc: [existing appointment]
+            Svc-->>Ctrl: throw BusinessRuleException
+            Ctrl-->>UI: 409 Conflict {"already has an appointment"}
+            UI-->>Staff: show "Dentist already booked at this time"
+        else no conflict
+            ApptRepo-->>Svc: []
+            Svc->>Builder: withPatient().withDentist().withTreatmentType()<br/>.withSchedule().withCreatedBy().build()
+            Builder->>NumGen: nextAppointmentNumber()
+            NumGen-->>Builder: "APT-2026-000123"
+            Builder-->>Svc: Appointment (validated, unsaved)
+
+            Svc->>ApptRepo: save(appointment)
+            ApptRepo->>DB: INSERT INTO appointments<br/>(trg_prevent_double_booking re-checked at DB level)
+            DB-->>ApptRepo: saved Appointment
+            ApptRepo-->>Svc: Appointment
+
+            Svc->>Publisher: publish(AppointmentEvent(CREATED))
+            Publisher->>Publisher: notify EmailNotificationObserver,<br/>SmsNotificationObserver, AuditLogObserver
+
+            Svc-->>Ctrl: AppointmentResponse
+            Ctrl-->>UI: 201 Created {appointmentNumber, ...}
+            UI-->>Staff: redirect to appointment-detail.html
+        end
+    end

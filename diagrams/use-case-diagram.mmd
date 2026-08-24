@@ -1,0 +1,61 @@
+%% Sunrise Dental Clinic - Use Case Diagram
+%% Mermaid has no native UML use-case diagram type, so this is modelled as a
+%% flowchart: actors as labelled boxes, use cases as stadium shapes inside the
+%% system-boundary subgraph, and <<include>>/<<extend>> as labelled dashed
+%% edges - the closest faithful equivalent Mermaid supports. See diagrams/README.md.
+flowchart LR
+    Staff(["🧑 Staff Member"])
+    Admin(["🧑‍💼 Administrator"])
+    Admin -. "generalises" .-> Staff
+
+    subgraph SYS["Sunrise Dental Clinic - Online Appointment & Patient Management System"]
+        direction TB
+        UC1(["Login"])
+        UC2(["Register New Appointment"])
+        UC2a(["Check Dentist Availability"])
+        UC2b(["Register New Patient"])
+        UC2c(["Generate Appointment Number"])
+        UC3(["Search / View Appointment Details"])
+        UC4(["Calculate and Print Bill"])
+        UC4a(["Calculate Treatment Cost"])
+        UC4b(["Apply Weekend Surcharge"])
+        UC4c(["Apply Loyalty Discount"])
+        UC4d(["Record Payment"])
+        UC5(["Cancel Appointment"])
+        UC5b(["Update Appointment Status"])
+        UC6(["View Help"])
+        UC7(["Logout"])
+        UC8(["Manage Dentists"])
+        UC9(["Manage Treatment Types & Fees"])
+        UC10(["Manage Staff Accounts"])
+        UC11(["View Decision-Support Reports"])
+        UC12(["Edit Staff Details<br/>(name &amp; email)"])
+
+        UC2 -. "&laquo;include&raquo;" .-> UC2a
+        UC2 -. "&laquo;include&raquo;" .-> UC2c
+        UC2b -. "&laquo;extend&raquo;\n(no existing patient selected)" .-> UC2
+        UC4 -. "&laquo;include&raquo;" .-> UC4a
+        UC4 -. "&laquo;include&raquo;" .-> UC4d
+        UC4b -. "&laquo;extend&raquo;\n(appointment is Sat/Sun)" .-> UC4a
+        UC4c -. "&laquo;extend&raquo;\n(patient has 5+ completed visits)" .-> UC4a
+        UC12 -. "&laquo;extend&raquo;\n(editing an existing account)" .-> UC10
+    end
+
+    Staff --- UC1
+    Staff --- UC2
+    Staff --- UC3
+    Staff --- UC4
+    Staff --- UC5
+    Staff --- UC5b
+    Staff --- UC6
+    Staff --- UC7
+    Staff --- UC11
+
+    Admin --- UC8
+    Admin --- UC9
+    Admin --- UC10
+
+    classDef actor fill:#0b3954,color:#fff,stroke:#0b3954;
+    classDef usecase fill:#eef3f6,stroke:#0b3954,color:#0b3954;
+    class Staff,Admin actor;
+    class UC1,UC2,UC2a,UC2b,UC2c,UC3,UC4,UC4a,UC4b,UC4c,UC4d,UC5,UC5b,UC6,UC7,UC8,UC9,UC10,UC11,UC12 usecase;

@@ -1,0 +1,42 @@
+%% Sequence Diagram 1 - User Authentication (Login)
+sequenceDiagram
+    actor Staff as Staff Member
+    participant UI as Login Form<br/>(login.html / auth.js)
+    participant Filter as JwtAuthenticationFilter
+    participant Ctrl as AuthController
+    participant Mgr as AuthenticationManager
+    participant UDS as CustomUserDetailsService
+    participant UserRepo as UserRepository
+    participant Jwt as JwtService
+    participant DB as MySQL
+
+    Staff->>UI: enter username & password, click "Sign In"
+    UI->>Filter: POST /api/auth/login {username, password}
+    Note over Filter: /api/auth/** is permitAll -<br/>filter passes the request through
+    Filter->>Ctrl: login(request, response)
+
+    Ctrl->>Mgr: authenticate(UsernamePasswordAuthenticationToken)
+    Mgr->>UDS: loadUserByUsername(username)
+    UDS->>UserRepo: findByUsername(username)
+    UserRepo->>DB: SELECT * FROM users WHERE username = ?
+    DB-->>UserRepo: user row
+    UserRepo-->>UDS: User
+
+    alt account disabled or password mismatch
+        UDS-->>Mgr: throw / BCrypt mismatch
+        Mgr-->>Ctrl: throw BadCredentialsException
+        Ctrl-->>UI: 401 Unauthorized {"Invalid username or password"}
+        UI-->>Staff: show inline error
+    else credentials valid
+        UDS-->>Mgr: UserDetails (username, encoded password, ROLE_*)
+        Mgr-->>Ctrl: Authentication (authenticated)
+
+        Ctrl->>UserRepo: findByUsername(username)
+        UserRepo-->>Ctrl: User
+        Ctrl->>Jwt: generateToken(username, role)
+        Jwt-->>Ctrl: signed JWT
+
+        Ctrl->>Ctrl: set HttpOnly cookie "dc_token"
+        Ctrl-->>UI: 200 OK {user, expiresIn} + Set-Cookie: dc_token
+        UI-->>Staff: redirect to dashboard.html
+    end

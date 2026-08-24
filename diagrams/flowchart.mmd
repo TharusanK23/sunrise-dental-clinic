@@ -1,0 +1,130 @@
+%% Sunrise Dental Clinic - Program Flowchart
+%% Shows the overall menu-driven application logic (brief: "menu driven
+%% application using Java programming language"), from launch through every
+%% major function and back to the main menu, down to Logout/Exit.
+flowchart TD
+    START(["Start"])
+    LAUNCH["Open client in browser\n(http://localhost:5501/)"]
+    LOGIN[/"Enter username &amp; password"/]
+    CHECKCRED{"Credentials valid?"}
+    LOGINERR["Show 'Invalid username\nor password' (401)"]
+    MENU{{"Main Menu (Dashboard)"}}
+
+    START --> LAUNCH --> LOGIN --> CHECKCRED
+    CHECKCRED -- "No" --> LOGINERR --> LOGIN
+    CHECKCRED -- "Yes" --> MENU
+
+    MENU -- "1. Register New Appointment" --> REG1
+    MENU -- "2. Search / Display Appointment" --> SRCH1
+    MENU -- "3. Calculate and Print Bill" --> BILL1
+    MENU -- "4. Manage Dentists &amp; Treatment Types (Admin)" --> FLEET1
+    MENU -- "5. Manage Staff Accounts (Admin)" --> STAFF1
+    MENU -- "6. View Reports" --> RPT1
+    MENU -- "7. Help" --> HELP1
+    MENU -- "8. Exit System" --> LOGOUT1
+
+    subgraph SG1["Register New Appointment"]
+        REG1["Select existing patient\nOR enter new patient details"]
+        REG2["Choose dentist, treatment type,\nappointment date &amp; time"]
+        REG3{"Dentist available\n(not ON_LEAVE/INACTIVE)?"}
+        REG4["Show 'Dentist not available' /\nsuggest another dentist or time"]
+        REG5{"Input valid?\n(contact no., date/time, etc.)"}
+        REG6["Show inline field\nvalidation errors"]
+        REG7{"Dentist already booked\nfor this exact date/time?"}
+        REG8["Reject: 409 Conflict\n'Dentist already has an appointment'"]
+        REG9["Build appointment (AppointmentBuilder),\ngenerate appointment number (Singleton)"]
+        REG10["Save appointment (status = CONFIRMED)"]
+        REG11["Notify observers\n(Email / SMS / Audit log)"]
+        REG12["Display confirmation with\nappointment number"]
+
+        REG1 --> REG2 --> REG3
+        REG3 -- "No" --> REG4 --> REG2
+        REG3 -- "Yes" --> REG5
+        REG5 -- "No" --> REG6 --> REG2
+        REG5 -- "Yes" --> REG7
+        REG7 -- "Yes" --> REG8 --> REG2
+        REG7 -- "No" --> REG9 --> REG10 --> REG11 --> REG12
+    end
+    REG12 --> MENU
+
+    subgraph SG2["Search / Display Appointment"]
+        SRCH1[/"Enter appointment number"/]
+        SRCH2{"Appointment found?"}
+        SRCH3["Show 404 'No appointment found'"]
+        SRCH4["Display full patient,\ndentist and visit details"]
+        SRCH1 --> SRCH2
+        SRCH2 -- "No" --> SRCH3 --> SRCH1
+        SRCH2 -- "Yes" --> SRCH4
+    end
+    SRCH4 --> MENU
+
+    subgraph SG3["Calculate and Print Bill"]
+        BILL1{"Bill already\ngenerated?"}
+        BILL2["Fetch existing bill\n(figures unchanged)"]
+        BILL3["Look up patient's\ncompleted prior visits"]
+        BILL4{"Select pricing rule"}
+        BILL5["Loyalty discount\n(&ge;5 completed visits): -10%"]
+        BILL6["Weekend surcharge\n(Sat/Sun appointment): +15%"]
+        BILL7["Standard rate\n(no adjustment)"]
+        BILL8["Apply 8% tax;\nsave bill (once, persisted)"]
+        BILL9["Display printable receipt"]
+        BILL10["Click 'Print Receipt'\n(browser print / save as PDF)"]
+
+        BILL1 -- "Yes" --> BILL2 --> BILL9
+        BILL1 -- "No" --> BILL3 --> BILL4
+        BILL4 -- "&ge;5 completed visits" --> BILL5 --> BILL8
+        BILL4 -- "appointment Sat/Sun" --> BILL6 --> BILL8
+        BILL4 -- "otherwise" --> BILL7 --> BILL8
+        BILL8 --> BILL9 --> BILL10
+    end
+    BILL10 --> MENU
+
+    subgraph SG4["Manage Dentists &amp; Treatment Types (Admin only)"]
+        FLEET1{"Add dentist, add treatment\ntype, or delete either?"}
+        FLEET2["Validate &amp; save\n(name, specialization / fee)"]
+        FLEET3["Delete by id"]
+        FLEET1 -- "Add" --> FLEET2
+        FLEET1 -- "Delete" --> FLEET3
+    end
+    FLEET2 --> MENU
+    FLEET3 --> MENU
+
+    subgraph SG5["Manage Staff Accounts (Admin only)"]
+        STAFF1{"Create, edit, or\ndeactivate account?"}
+        STAFF2["Create: username, temp password,\nname, email, role"]
+        STAFF3["Edit: update full name\nand email only"]
+        STAFF4["Deactivate: enabled = false"]
+        STAFF1 -- "Create" --> STAFF2
+        STAFF1 -- "Edit" --> STAFF3
+        STAFF1 -- "Deactivate" --> STAFF4
+    end
+    STAFF2 --> MENU
+    STAFF3 --> MENU
+    STAFF4 --> MENU
+
+    subgraph SG6["View Reports"]
+        RPT1["Dashboard KPIs\n(appointments, revenue, dentists)"]
+        RPT2["Daily revenue report\n(sp_daily_revenue_report)"]
+        RPT3["Dentist utilisation report\n(vw_dentist_utilization)"]
+        RPT1 --> RPT2 --> RPT3
+    end
+    RPT3 --> MENU
+
+    subgraph SG7["Help"]
+        HELP1["Display step-by-step\nstaff instructions (GET /api/help)"]
+    end
+    HELP1 --> MENU
+
+    LOGOUT1["Clear session cookie\n(POST /api/auth/logout)"]
+    END(["End"])
+    LOGOUT1 --> END
+
+    classDef process fill:#eef3f6,stroke:#0b3954,color:#0b3954;
+    classDef decision fill:#fff3cd,stroke:#8a6d00,color:#5c4600;
+    classDef terminal fill:#0b3954,stroke:#0b3954,color:#fff;
+    classDef io fill:#e6f4ee,stroke:#12876b,color:#0b3954;
+
+    class START,END terminal;
+    class LAUNCH,REG9,REG10,REG11,REG12,BILL2,BILL3,BILL5,BILL6,BILL7,BILL8,BILL9,BILL10,FLEET2,FLEET3,STAFF2,STAFF3,STAFF4,RPT1,RPT2,RPT3,HELP1,LOGOUT1,LOGINERR,REG4,REG6,REG8,SRCH3,SRCH4,REG1,REG2 process;
+    class LOGIN,SRCH1 io;
+    class CHECKCRED,REG3,REG5,REG7,SRCH2,BILL1,BILL4,FLEET1,STAFF1,MENU decision;

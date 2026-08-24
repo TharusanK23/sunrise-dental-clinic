@@ -1,0 +1,239 @@
+%% Sunrise Dental Clinic - Class Diagram
+classDiagram
+    direction TB
+
+    class User {
+        -Long id
+        -String username
+        -String password
+        -String fullName
+        -String email
+        -Role role
+        -boolean enabled
+        -LocalDateTime createdAt
+        +getUsername() String
+        +getRole() Role
+    }
+    class Role {
+        <<enumeration>>
+        ADMIN
+        STAFF
+    }
+
+    class Patient {
+        -Long id
+        -String fullName
+        -String address
+        -String contactNumber
+        -String email
+        -LocalDate dateOfBirth
+        -LocalDateTime createdAt
+        +getFullName() String
+    }
+
+    class TreatmentType {
+        -Long id
+        -String treatmentName
+        -BigDecimal consultationFee
+        -String description
+        +getConsultationFee() BigDecimal
+    }
+
+    class Dentist {
+        -Long id
+        -String fullName
+        -String specialization
+        -String contactNumber
+        -DentistStatus status
+        +getStatus() DentistStatus
+        +setStatus(DentistStatus) void
+    }
+    class DentistStatus {
+        <<enumeration>>
+        AVAILABLE
+        ON_LEAVE
+        INACTIVE
+    }
+
+    class Appointment {
+        -Long id
+        -String appointmentNumber
+        -LocalDate appointmentDate
+        -LocalTime appointmentTime
+        -AppointmentStatus status
+        -String notes
+        -LocalDateTime createdAt
+        +getAppointmentNumber() String
+    }
+    class AppointmentStatus {
+        <<enumeration>>
+        PENDING
+        CONFIRMED
+        COMPLETED
+        CANCELLED
+    }
+
+    class Bill {
+        -Long id
+        -String billNumber
+        -BigDecimal consultationFee
+        -BigDecimal subtotal
+        -BigDecimal surchargeAmount
+        -BigDecimal discountAmount
+        -BigDecimal taxAmount
+        -BigDecimal totalAmount
+        -String pricingStrategy
+        -PaymentStatus paymentStatus
+        -String paymentMethod
+        -LocalDateTime generatedAt
+        +getTotalAmount() BigDecimal
+    }
+    class PaymentStatus {
+        <<enumeration>>
+        UNPAID
+        PAID
+    }
+
+    class NotificationLog {
+        -Long id
+        -String appointmentNumber
+        -String channel
+        -String message
+        -LocalDateTime sentAt
+    }
+
+    User "1" --o "0..*" Appointment : creates
+    Patient "1" o-- "0..*" Appointment : books
+    Dentist "1" o-- "0..*" Appointment : attends
+    TreatmentType "1" o-- "0..*" Appointment : classifies
+    Appointment "1" *-- "0..1" Bill : generates
+    Appointment --> AppointmentStatus
+    Dentist --> DentistStatus
+    Bill --> PaymentStatus
+    User --> Role
+
+    class AppointmentService {
+        <<interface>>
+        +register(RegisterAppointmentRequest, String) AppointmentResponse
+        +findByAppointmentNumber(String) AppointmentResponse
+        +cancel(String) AppointmentResponse
+        +updateStatus(String, String) AppointmentResponse
+    }
+    class AppointmentServiceImpl
+    AppointmentService <|.. AppointmentServiceImpl
+
+    class BillService {
+        <<interface>>
+        +generateOrFetch(String) BillResponse
+        +settlePayment(String, SettlePaymentRequest) BillResponse
+    }
+    class BillServiceImpl
+    BillService <|.. BillServiceImpl
+
+    class UserService {
+        <<interface>>
+        +findAll() List~UserResponse~
+        +create(CreateUserRequest) UserResponse
+        +update(Long, UpdateUserRequest) UserResponse
+        +deactivate(Long) void
+    }
+    class UserServiceImpl
+    UserService <|.. UserServiceImpl
+    UserServiceImpl ..> User : Admin edits name/email only
+
+    class AppointmentBuilder {
+        -Patient patient
+        -Dentist dentist
+        -TreatmentType treatmentType
+        -LocalDate appointmentDate
+        -LocalTime appointmentTime
+        -User createdBy
+        -AppointmentStatus status
+        +withPatient(Patient) AppointmentBuilder
+        +withDentist(Dentist) AppointmentBuilder
+        +withTreatmentType(TreatmentType) AppointmentBuilder
+        +withSchedule(LocalDate, LocalTime) AppointmentBuilder
+        +withCreatedBy(User) AppointmentBuilder
+        +build() Appointment
+    }
+
+    class DocumentFactory~T,S~ {
+        <<interface>>
+        +create(S) T
+    }
+    class BillFactory {
+        +create(Appointment) Bill
+    }
+    DocumentFactory <|.. BillFactory
+
+    class PricingStrategy {
+        <<interface>>
+        +calculate(BigDecimal, long, LocalDate) PricingResult
+        +getName() String
+    }
+    class AbstractPricingStrategy {
+        <<abstract>>
+        #double taxRate
+        #buildResult(BigDecimal, BigDecimal, BigDecimal) PricingResult
+    }
+    class StandardPricingStrategy
+    class WeekendSurchargePricingStrategy {
+        -double surchargeRate
+    }
+    class LoyaltyDiscountPricingStrategy {
+        -double discountRate
+    }
+    class PricingContext {
+        -BusinessProperties props
+        +price(BigDecimal, long, LocalDate) PricingResult
+        -resolveStrategy(long, LocalDate) PricingStrategy
+    }
+    PricingStrategy <|.. AbstractPricingStrategy
+    AbstractPricingStrategy <|-- StandardPricingStrategy
+    AbstractPricingStrategy <|-- WeekendSurchargePricingStrategy
+    AbstractPricingStrategy <|-- LoyaltyDiscountPricingStrategy
+    PricingContext ..> PricingStrategy : selects
+
+    class AppointmentObserver {
+        <<interface>>
+        +onAppointmentEvent(AppointmentEvent) void
+    }
+    class AppointmentEventPublisher {
+        -List~AppointmentObserver~ observers
+        +publish(AppointmentEvent) void
+    }
+    class EmailNotificationObserver
+    class SmsNotificationObserver
+    class AuditLogObserver
+    AppointmentObserver <|.. EmailNotificationObserver
+    AppointmentObserver <|.. SmsNotificationObserver
+    AppointmentObserver <|.. AuditLogObserver
+    AppointmentEventPublisher o-- "0..*" AppointmentObserver
+    AppointmentEventPublisher ..> NotificationLog : observers persist to
+
+    class AppointmentNumberGenerator {
+        -AppointmentNumberGenerator$ INSTANCE$
+        -AtomicLong sequence
+        -AppointmentNumberGenerator()
+        +getInstance()$ AppointmentNumberGenerator
+        +nextAppointmentNumber() String
+        +billNumberFor(String) String
+    }
+    class AppConfigManager {
+        -AppConfigManager$ INSTANCE$
+        -Map~String,String~ settings
+        -AppConfigManager()
+        +getInstance()$ AppConfigManager
+        +get(String) String
+    }
+
+    AppointmentServiceImpl ..> AppointmentBuilder : uses
+    AppointmentServiceImpl ..> AppointmentEventPublisher : uses
+    AppointmentServiceImpl ..> Patient
+    AppointmentServiceImpl ..> Dentist
+    AppointmentServiceImpl ..> Appointment
+    BillServiceImpl ..> BillFactory : uses
+    BillFactory ..> PricingContext : uses
+    BillFactory ..> Bill
+    AppointmentBuilder ..> AppointmentNumberGenerator : uses
+    BillFactory ..> AppointmentNumberGenerator : uses
