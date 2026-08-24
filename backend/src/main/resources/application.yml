@@ -1,0 +1,58 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: dental-clinic-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/sunrise_dental_clinic_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    username: root
+    password: ""
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
+  jackson:
+    date-format: yyyy-MM-dd
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  cors:
+    allowed-origins: "http://localhost,http://127.0.0.1,http://localhost:5501,http://127.0.0.1:5501,http://localhost:8082,http://localhost:63342"
+  security:
+    jwt:
+      # Demo secret for coursework/local evaluation only - rotate before any real deployment.
+      secret: "CIS6003AdvancedProgrammingSunriseDentalClinicSecretKeyForJwtSigning2026"
+      expiration-ms: 3600000        # 1 hour
+      cookie-name: dc_token
+  business:
+    tax-rate: 0.08                    # 8% government/health-service tax applied to every bill
+    weekend-surcharge-rate: 0.15      # 15% surcharge for a Sat/Sun appointment slot
+    loyalty-discount-visit-count: 5   # a patient's 5th+ completed appointment qualifies for the loyalty discount
+    loyalty-discount-rate: 0.10       # 10% discount for loyal, returning patients
+    currency-symbol: "Rs."
+
+logging:
+  level:
+    root: INFO
+    com.sunrise.dentalclinic: DEBUG
+  file:
+    name: logs/dental-clinic.log
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
