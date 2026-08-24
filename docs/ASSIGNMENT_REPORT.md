@@ -290,14 +290,17 @@ and every documented response - not just the happy path, since
 `GlobalExceptionHandler`'s `ApiErrorResponse` shape means every error
 response is equally well-typed and equally visible here.
 
-![Swagger's "Try it out" used to execute a real login request against the live backend - genuine 200 response with the authenticated admin user, request/response headers, and the equivalent curl command](../testing/screenshots/19-swagger-login-executed.png)
+![Swagger's "Try it out" used to execute a real login request against the live backend - genuine 200 response with the authenticated admin user, the signed JWT in "token", request/response headers, and the equivalent curl command](../testing/screenshots/19-swagger-login-executed.png)
 
 Swagger UI is not only documentation - the **"Try it out"** button turns
 any operation into a live HTTP client. The screenshot above is a *real*
 executed request (not a mock): the generated `curl` command, the exact
-request URL, and a genuine `200 OK` response body from the running
-application are all visible, together with the response headers Spring
-Security adds (`x-frame-options: DENY`, `x-content-type-options: nosniff`,
+request URL, and a genuine `200 OK` response body - including the real,
+signed JWT `token` value described in §3.6, which could be copied straight
+into the Authorize dialog to authenticate every other request in this
+Swagger session - from the running application are all visible, together
+with the response headers Spring Security adds (`x-frame-options: DENY`,
+`x-content-type-options: nosniff`,
 etc. - see §3.6). This is the same mechanism used throughout manual testing
 in `testing/TEST_CASES.md` as an alternative to Postman/curl.
 
@@ -540,20 +543,59 @@ entries"*:
    unavoidable safety net described in §3.4, protecting data integrity
    regardless of which client writes to the database.
 
-### 3.6 Sessions/cookies and security
+### 3.6 Authorization via JWT, and sessions/cookies
 
-Authentication uses a signed JWT (`io.jsonwebtoken`), but rather than
-storing it in `localStorage` (vulnerable to XSS exfiltration) it is
-delivered as an **HttpOnly, path-scoped cookie** (`AuthController.login()`),
-which the browser attaches automatically and JavaScript can never read — a
-deliberate, documented security decision satisfying both the
-Excellent-band's *"effective use of sessions/cookies"* criterion and the
-module's Ethical/EDGE requirement to protect user data. Every request
-passes through `JwtAuthenticationFilter`, which validates the token and
-populates Spring Security's context; role-based method security
-(`@PreAuthorize("hasRole('ADMIN')")`, and matcher-based rules in
-`SecurityConfig`) restricts dentist/treatment-type/staff management to
-administrators, verified directly in testing (§4, AUTH-07).
+Authorization throughout the API is **JWT-based**: `POST /api/auth/login`
+authenticates the username/password against the BCrypt hash stored in
+`users` (via `AuthenticationManager` → `CustomUserDetailsService`) and, only
+on success, `JwtService.generateToken()` mints a signed JSON Web Token
+(HMAC-SHA512, `io.jsonwebtoken`) whose subject is the username and whose
+`role` claim carries `ADMIN`/`STAFF`, with a 1-hour expiry
+(`app.security.jwt.expiration-ms`). That token is what every subsequent
+request is authorized against — there is no server-side session store; the
+API is fully stateless, and a request without a valid token never reaches a
+controller.
+
+The token is delivered to the client **two ways**, deliberately:
+
+1. As an **HttpOnly, path-scoped cookie** (`dc_token`) — what the browser
+   client actually relies on. Rather than storing the token in
+   `localStorage` (vulnerable to XSS exfiltration), the cookie is attached
+   to every request automatically by the browser and JavaScript can never
+   read it — a deliberate, documented security decision satisfying both the
+   Excellent-band's *"effective use of sessions/cookies"* criterion and the
+   module's Ethical/EDGE requirement to protect user data.
+2. As the `token` field in the **login response body itself** — so a
+   non-browser API client (Postman, curl, a future mobile app, or Swagger's
+   own **Authorize** button) that cannot hold an HttpOnly cookie can carry
+   it explicitly as an `Authorization: Bearer <token>` header instead.
+   `JwtAuthenticationFilter.resolveToken()` checks the cookie first and
+   falls back to that header, so either mechanism authenticates identically
+   — verified directly by
+   `AppointmentFlowIntegrationTest.loginResponseTokenWorksAsBearerAuthorization`,
+   which logs in, extracts `token` from the JSON body with no cookie
+   involved at all, and successfully calls a protected endpoint with only
+   `Authorization: Bearer <token>` (§4). `testing/postman/SunriseDentalClinic.postman_collection.json`
+   demonstrates the same thing at the collection level: its "Login" requests
+   capture the returned token into a `{{token}}` variable via a test script,
+   and the collection's inherited Bearer auth (`Authorization: Bearer
+   {{token}}`) is applied to every other request, alongside Postman's normal
+   cookie jar.
+
+Every request passes through `JwtAuthenticationFilter`, which resolves and
+validates the token (signature *and* expiry, via
+`JwtService.isTokenValid()`) and populates Spring Security's context for
+that request only; an invalid, tampered, or expired token is simply treated
+as anonymous, and `SecurityConfig`'s explicit
+`HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)` then returns a clean `401`
+rather than leaking a stack trace (§4, AUTH-05/AUTH-09). Role-based method
+security (`@PreAuthorize("hasRole('ADMIN')")`, and matcher-based rules in
+`SecurityConfig`) further restricts dentist/treatment-type/staff management
+to administrators, verified directly in testing (§4, AUTH-07). Swagger UI
+itself is wired to this scheme via `OpenApiConfig` (a `bearerAuth`
+`SecurityScheme`), so its **Authorize** padlock accepts the same token
+end-to-end — see the Swagger screenshots in §3.2.1, including a login
+executed live and its `token` visible in the response body.
 
 ### 3.7 User interface
 
@@ -643,7 +685,7 @@ existing code.
 
 ### 4.2 Test automation and evidence
 
-25 automated JUnit 5 tests run with a single command (`./mvnw test`, see
+26 automated JUnit 5 tests run with a single command (`./mvnw test`, see
 `docs/SETUP.md` §8), spanning:
 
 - **Pure unit tests** (`PricingContextTest`, `AppointmentBuilderTest`) — no
@@ -653,19 +695,24 @@ existing code.
   branching logic (double-booking rejection, unavailable-dentist rejection,
   missing-patient-details rejection, staff-edit scoping) from the
   database.
-- **One full Spring Boot integration test**
-  (`AppointmentFlowIntegrationTest`) — boots the real Spring context, the
-  real Spring Security filter chain, and an in-memory H2 database, then
-  drives the system exactly as a browser client would: login → register an
-  appointment → generate a bill, plus negative cases (anonymous access,
-  double-booking via the live REST layer).
+- **One full Spring Boot integration test class**
+  (`AppointmentFlowIntegrationTest`, 3 methods) — boots the real Spring
+  context, the real Spring Security filter chain, and an in-memory H2
+  database, then drives the system exactly as a browser client would:
+  login → register an appointment → generate a bill, plus negative cases
+  (anonymous access, double-booking via the live REST layer) and a
+  dedicated JWT test that logs in, reads `token` straight out of the JSON
+  response body with no cookie involved at all, and calls a protected
+  endpoint using only `Authorization: Bearer <token>` — proving the
+  JWT-based authorization described in §3.6 actually works end-to-end, not
+  only in the cookie path the browser client happens to use.
 
 A captured passing run (`testing/evidence/*.txt`, generated by Maven
-Surefire) shows `Tests run: 25, Failures: 0, Errors: 0` across all nine
+Surefire) shows `Tests run: 26, Failures: 0, Errors: 0` across all nine
 test classes, confirmed visually below per the Excellent-band's
 "screen-grabbing" requirement:
 
-![`./mvnw test` - all 25 tests passing, BUILD SUCCESS](../testing/screenshots/14-tests-passing.png)
+![`./mvnw test` - all 26 tests passing, BUILD SUCCESS](../testing/screenshots/14-tests-passing.png)
 
 ### 4.3 Coverage beyond the automated suite
 
@@ -686,7 +733,7 @@ collection (`testing/postman/SunriseDentalClinic.postman_collection.json`).
 
 ### 4.4 Evaluation — successes, and lessons learned
 
-The suite is honestly reported as fully passing (25/25), and it reached
+The suite is honestly reported as fully passing (26/26), and it reached
 that state considerably more smoothly than a first attempt at a system of
 this shape typically does, because two lessons learned on an earlier,
 companion coursework build were applied proactively rather than
@@ -714,7 +761,7 @@ rediscovered the hard way:
 One genuine failure *was* hit during this project's own development, and is
 recorded honestly rather than edited out of the process: the first run of
 `AppointmentFlowIntegrationTest` failed with a unique-constraint violation
-on the seeded `nadeesha` username, because both test methods shared the
+on the seeded `kirisha` username, because both test methods shared the
 same Spring-managed H2 context and the second method's `@BeforeEach` tried
 to re-insert a username the first method's `@BeforeEach` had already
 committed. The fix was to annotate the test class `@Transactional`, so each
@@ -811,7 +858,7 @@ current state).
 | Effective use of sessions/cookies | §3.6 |
 | Test rationale + TDD explanation | §4.1, `testing/TEST_PLAN.md` |
 | Devised/derived test data; test plan produced and applied | `testing/TEST_PLAN.md` §5, `testing/TEST_CASES.md` |
-| Test classes created; relevant tests carried out and documented | §4.2, 9 test classes, 25 methods |
+| Test classes created; relevant tests carried out and documented | §4.2, 9 test classes, 26 methods |
 | Demonstrate code passes all tests (screen-grab evidence) | §4.2, `testing/evidence/`, screenshot included |
 | Test automation used | §4.2 (`./mvnw test`), `.github/workflows/ci.yml` |
 | Evaluate success/failure incl. lessons learned | §4.4 |

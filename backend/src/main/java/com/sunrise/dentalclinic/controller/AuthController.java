@@ -53,7 +53,7 @@ public class AuthController {
         cookie.setMaxAge((int) jwtService.getExpirationSeconds());
         response.addCookie(cookie);
 
-        return ResponseEntity.ok(new LoginResponse(DtoMapper.toResponse(user), jwtService.getExpirationSeconds()));
+        return ResponseEntity.ok(new LoginResponse(DtoMapper.toResponse(user), token, jwtService.getExpirationSeconds()));
     }
 
     @PostMapping("/logout")

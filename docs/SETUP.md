@@ -87,7 +87,7 @@ contain 2 seeded accounts.
 | Username | Password | Role | Purpose |
 |---|---|---|---|
 | `admin` | `admin123` | ADMIN | Dentists, treatment types, staff accounts, all reports |
-| `nadeesha` | `Nadeesha@123` | STAFF | Day-to-day appointment & billing operations |
+| `kirisha` | `Kirisha@123` | STAFF | Day-to-day appointment & billing operations |
 
 Passwords are stored as BCrypt hashes (`database/schema.sql`); they are
 never stored or transmitted in plain text.
@@ -191,7 +191,7 @@ Override it without editing the file by adding, before the other
 | Swagger / OpenAPI UI | `http://localhost:8082/swagger-ui.html` |
 | phpMyAdmin (optional) | `http://localhost/phpmyadmin` |
 
-Log in with `admin`/`admin123` or `nadeesha`/`Nadeesha@123` (§2.4).
+Log in with `admin`/`admin123` or `kirisha`/`Kirisha@123` (§2.4).
 
 ---
 
@@ -211,7 +211,7 @@ collection").
 ```bash
 # Login (saves the session cookie to cookies.txt)
 curl -c cookies.txt -H "Content-Type: application/json" \
-     -d '{"username":"nadeesha","password":"Nadeesha@123"}' \
+     -d '{"username":"kirisha","password":"Kirisha@123"}' \
      http://localhost:8082/api/auth/login
 
 # List dentists
@@ -228,10 +228,48 @@ curl -b cookies.txt -H "Content-Type: application/json" -d '{
 curl -b cookies.txt http://localhost:8082/api/bills/appointment/APT-2026-000001
 ```
 
-### 6.3 Swagger UI
+### 6.3 JWT bearer token authorization (for API clients that can't hold cookies)
 
-Open `http://localhost:8082/swagger-ui.html`, log in via the client first
-(so the browser holds the auth cookie), then "Try it out" on any endpoint.
+Every login response now returns the signed JWT itself in the response body
+(`token`), not only as the HttpOnly cookie the browser client relies on.
+Any request can therefore authenticate two equivalent ways -
+`JwtAuthenticationFilter` checks the `dc_token` cookie first, then falls
+back to an `Authorization: Bearer <token>` header - which is what a
+non-browser client (a script, curl without a saved cookie jar, or Swagger's
+"Authorize" button, §6.4) uses instead:
+
+```bash
+# Login and capture just the token
+TOKEN=$(curl -s -H "Content-Type: application/json" \
+     -d '{"username":"kirisha","password":"Kirisha@123"}' \
+     http://localhost:8082/api/auth/login | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+# Use it as a Bearer token instead of a cookie
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8082/api/appointments
+```
+
+The token is a standard signed JWT (HMAC-SHA256, `io.jsonwebtoken`) carrying
+the username as its subject and the user's role as a claim, with a 1-hour
+expiry (`app.security.jwt.expiration-ms`) - `JwtService.isTokenValid()`
+verifies both the signature and the expiry on every request, and
+`GlobalExceptionHandler`/`SecurityConfig` reject an invalid, tampered, or
+expired token with `401 Unauthorized` before it ever reaches a controller.
+This is the "Authorization" mechanism referenced throughout
+`docs/ASSIGNMENT_REPORT.md` §3.6.
+
+### 6.4 Swagger UI
+
+Open `http://localhost:8082/swagger-ui.html`. Two ways to authorise
+requests made from "Try it out":
+
+- **Browser cookie (simplest):** log in via the client first (so the
+  browser holds the `dc_token` cookie), then "Try it out" on any endpoint -
+  the cookie is sent automatically.
+- **Bearer token (works even without the client):** execute `POST
+  /api/auth/login` directly in Swagger, copy the `token` value from its
+  response, click the padlock **Authorize** button at the top of the page,
+  paste the token, and click Authorize - every subsequent "Try it out" call
+  then sends `Authorization: Bearer <token>` automatically.
 
 ---
 
@@ -239,7 +277,7 @@ Open `http://localhost:8082/swagger-ui.html`, log in via the client first
 
 1. **User Authentication (Login)** — Open the client; try an invalid
    password (expect a clear "Invalid username or password" message and a
-   `401`); then log in with `nadeesha`/`Nadeesha@123`.
+   `401`); then log in with `kirisha`/`Kirisha@123`.
 2. **Register New Appointment** — Dashboard → *+ New Appointment*. Fill in a
    new patient or search for an existing one, choose a dentist and
    treatment type, pick a date/time, *Save*. Confirm the generated
@@ -265,7 +303,7 @@ Open `http://localhost:8082/swagger-ui.html`, log in via the client first
    utilisation report (backed by the `vw_dentist_utilization` view) both
    render.
 9. **Admin-only screens** — Log in as `admin`; confirm *Staff Accounts* is
-   visible and usable. Log in as `nadeesha`; confirm it is hidden, and that
+   visible and usable. Log in as `kirisha`; confirm it is hidden, and that
    directly calling `POST /api/users` as staff returns `403 Forbidden`.
 10. **Edit staff details (Admin)** — Log in as `admin` → *Staff Accounts* →
     click *Edit* on a staff row; confirm the modal opens pre-filled with
@@ -273,7 +311,7 @@ Open `http://localhost:8082/swagger-ui.html`, log in via the client first
     disabled - not editable here). Change the name/email and *Save
     Changes*; confirm the table updates immediately and `PATCH
     /api/users/{id}` returns the updated record. Confirm the same request
-    as `nadeesha` (STAFF) returns `403 Forbidden`, and that a blank name or
+    as `kirisha` (STAFF) returns `403 Forbidden`, and that a blank name or
     an invalid email is rejected with a `400` and an inline field error.
 
 ---
@@ -288,7 +326,7 @@ cd SunriseDentalClinic\backend
 This runs all JUnit 5 + Mockito unit tests and the full Spring Boot
 integration test (real Spring context, real Spring Security filter chain,
 in-memory H2 database) covering login, registration, double-booking
-rejection, and billing. A summary is printed at the end (`Tests run: 25,
+rejection, and billing. A summary is printed at the end (`Tests run: 26,
 Failures: 0, Errors: 0`), and per-class reports are written to
 `backend/target/surefire-reports/`. See `testing/TEST_PLAN.md` and
 `testing/TEST_CASES.md` for the full rationale, test data, and traceability

@@ -15,7 +15,7 @@ sequenceDiagram
 
     Staff->>UI: select/enter patient, dentist,<br/>treatment type, date & time, click "Save"
     UI->>Ctrl: POST /api/appointments {payload}
-    Ctrl->>Svc: register(request, "nadeesha")
+    Ctrl->>Svc: register(request, "kirisha")
 
     Svc->>PatRepo: findById(patientId) OR save(new Patient)
     PatRepo->>DB: SELECT / INSERT INTO patients

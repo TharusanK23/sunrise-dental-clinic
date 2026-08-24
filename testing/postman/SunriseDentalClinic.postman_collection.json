@@ -1,13 +1,18 @@
 {
   "info": {
     "name": "Sunrise Dental Clinic API",
-    "description": "CIS6003 coursework - Sunrise Dental Clinic System REST API. Run 'Auth > Login (Staff)' first; Postman's cookie jar then keeps every subsequent request authenticated automatically.",
+    "description": "CIS6003 coursework - Sunrise Dental Clinic System REST API. Run 'Auth > Login (Staff)' first - Postman's cookie jar authenticates every subsequent request automatically, AND the login requests' test script also captures the JWT into the {{token}} collection variable, which this collection's Bearer auth (inherited by every request) uses as a fallback. Either mechanism alone is sufficient; both are demonstrated together.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8082/api" },
     { "key": "appointmentNumber", "value": "APT-2026-000001" },
-    { "key": "billNumber", "value": "INV-2026-000001" }
+    { "key": "billNumber", "value": "INV-2026-000001" },
+    { "key": "token", "value": "" }
   ],
   "item": [
     {
@@ -15,15 +20,43 @@
       "item": [
         {
           "name": "Login (Staff)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Captures the JWT from the response body into {{token}},",
+                  "// demonstrating explicit JWT-based Authorization alongside the HttpOnly cookie.",
+                  "const body = pm.response.json();",
+                  "if (body.token) { pm.collectionVariables.set('token', body.token); }",
+                  "pm.test('login returned a JWT token', () => pm.expect(body.token).to.be.a('string').and.not.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"username\": \"nadeesha\",\n  \"password\": \"Nadeesha@123\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"kirisha\",\n  \"password\": \"Kirisha@123\"\n}" },
             "url": "{{baseUrl}}/auth/login"
           }
         },
         {
           "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.token) { pm.collectionVariables.set('token', body.token); }",
+                  "pm.test('login returned a JWT token', () => pm.expect(body.token).to.be.a('string').and.not.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -36,7 +69,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"username\": \"nadeesha\",\n  \"password\": \"wrong-password\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"kirisha\",\n  \"password\": \"wrong-password\"\n}" },
             "url": "{{baseUrl}}/auth/login"
           }
         },
@@ -266,7 +299,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Nadeesha K. Fernando\",\n  \"email\": \"nadeesha.fernando@sunrisedental.lk\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Kirisha N\",\n  \"email\": \"kirisha.fernando@sunrisedental.lk\"\n}" },
             "url": "{{baseUrl}}/users/2"
           }
         },
@@ -275,7 +308,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"\",\n  \"email\": \"nadeesha@sunrisedental.lk\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"\",\n  \"email\": \"kirisha@sunrisedental.lk\"\n}" },
             "url": "{{baseUrl}}/users/2"
           }
         },
@@ -284,7 +317,7 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Nadeesha Fernando\",\n  \"email\": \"not-an-email\"\n}" },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Kirisha N\",\n  \"email\": \"not-an-email\"\n}" },
             "url": "{{baseUrl}}/users/2"
           }
         },

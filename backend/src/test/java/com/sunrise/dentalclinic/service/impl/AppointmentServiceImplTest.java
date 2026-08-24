@@ -46,7 +46,7 @@ class AppointmentServiceImplTest {
     private final Patient patient = Patient.builder().id(1L).fullName("Kasun Perera").address("Colombo").contactNumber("0771234567").build();
     private final Dentist dentist = Dentist.builder().id(1L).fullName("Silva").status(DentistStatus.AVAILABLE).build();
     private final TreatmentType treatmentType = TreatmentType.builder().id(1L).treatmentName("Scaling").consultationFee(BigDecimal.valueOf(2500)).build();
-    private final User staff = User.builder().id(1L).username("nadeesha").role(Role.STAFF).build();
+    private final User staff = User.builder().id(1L).username("kirisha").role(Role.STAFF).build();
 
     private RegisterAppointmentRequest requestFor(Long patientId) {
         return new RegisterAppointmentRequest(patientId, null, null, null, null, 1L, 1L,
@@ -60,10 +60,10 @@ class AppointmentServiceImplTest {
         when(dentistRepository.findById(1L)).thenReturn(Optional.of(dentist));
         when(treatmentTypeRepository.findById(1L)).thenReturn(Optional.of(treatmentType));
         when(appointmentRepository.findConflictingForDentist(eq(1L), any(), any())).thenReturn(Collections.emptyList());
-        when(userRepository.findByUsername("nadeesha")).thenReturn(Optional.of(staff));
+        when(userRepository.findByUsername("kirisha")).thenReturn(Optional.of(staff));
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AppointmentResponse response = appointmentService.register(requestFor(1L), "nadeesha");
+        AppointmentResponse response = appointmentService.register(requestFor(1L), "kirisha");
 
         assertThat(response.appointmentNumber()).startsWith("APT-");
         assertThat(response.status()).isEqualTo(AppointmentStatus.CONFIRMED);
@@ -77,7 +77,7 @@ class AppointmentServiceImplTest {
         when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
         when(dentistRepository.findById(1L)).thenReturn(Optional.of(onLeave));
 
-        assertThatThrownBy(() -> appointmentService.register(requestFor(1L), "nadeesha"))
+        assertThatThrownBy(() -> appointmentService.register(requestFor(1L), "kirisha"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("not available");
 
@@ -93,7 +93,7 @@ class AppointmentServiceImplTest {
         when(treatmentTypeRepository.findById(1L)).thenReturn(Optional.of(treatmentType));
         when(appointmentRepository.findConflictingForDentist(eq(1L), any(), any())).thenReturn(List.of(existing));
 
-        assertThatThrownBy(() -> appointmentService.register(requestFor(1L), "nadeesha"))
+        assertThatThrownBy(() -> appointmentService.register(requestFor(1L), "kirisha"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("already has an appointment");
 
@@ -106,7 +106,7 @@ class AppointmentServiceImplTest {
         RegisterAppointmentRequest incomplete = new RegisterAppointmentRequest(null, null, null, null, null, 1L, 1L,
                 LocalDate.now().plusDays(1), LocalTime.of(10, 0), null);
 
-        assertThatThrownBy(() -> appointmentService.register(incomplete, "nadeesha"))
+        assertThatThrownBy(() -> appointmentService.register(incomplete, "kirisha"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("patientId");
 
@@ -119,7 +119,7 @@ class AppointmentServiceImplTest {
         when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
         when(dentistRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> appointmentService.register(requestFor(1L), "nadeesha"))
+        assertThatThrownBy(() -> appointmentService.register(requestFor(1L), "kirisha"))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 

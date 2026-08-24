@@ -59,8 +59,8 @@ class AppointmentFlowIntegrationTest {
     @BeforeEach
     void seed() {
         userRepository.save(User.builder()
-                .username("nadeesha").password(passwordEncoder.encode("Nadeesha@123"))
-                .fullName("Nadeesha Fernando").email("nadeesha@sunrise.lk").role(Role.STAFF).enabled(true).build());
+                .username("kirisha").password(passwordEncoder.encode("Kirisha@123"))
+                .fullName("Kirisha N").email("kirisha@sunrise.lk").role(Role.STAFF).enabled(true).build());
 
         dentist = dentistRepository.save(Dentist.builder()
                 .fullName("Dr. Perera").specialization("General Dentistry")
@@ -77,14 +77,31 @@ class AppointmentFlowIntegrationTest {
     private Cookie loginAndGetCookie() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(Map.of("username", "nadeesha", "password", "Nadeesha@123"))))
+                        .content(objectMapper.writeValueAsString(Map.of("username", "kirisha", "password", "Kirisha@123"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.username", is("nadeesha")))
+                .andExpect(jsonPath("$.user.username", is("kirisha")))
+                .andExpect(jsonPath("$.token").exists())
                 .andReturn();
 
         Cookie cookie = result.getResponse().getCookie("dc_token");
         assertThat(cookie).isNotNull();
         return cookie;
+    }
+
+    @Test
+    @DisplayName("Login response body carries the raw JWT, and it works as an Authorization: Bearer header for API clients that cannot use the HttpOnly cookie")
+    void loginResponseTokenWorksAsBearerAuthorization() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("username", "kirisha", "password", "Kirisha@123"))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String token = objectMapper.readTree(result.getResponse().getContentAsString()).get("token").asText();
+        assertThat(token).isNotBlank();
+
+        mockMvc.perform(get("/api/appointments").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
     }
 
     @Test

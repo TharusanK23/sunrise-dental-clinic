@@ -37,7 +37,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Updates only the full name and email of an existing staff account, leaving username/password/role untouched")
     void updatesStaffNameAndEmailOnly() {
-        User existing = User.builder().id(1L).username("nadeesha").password("hashed").fullName("Old Name")
+        User existing = User.builder().id(1L).username("kirisha").password("hashed").fullName("Old Name")
                 .email("old@sunrise.lk").role(Role.STAFF).enabled(true).build();
         when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -50,7 +50,7 @@ class UserServiceImplTest {
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         User saved = captor.getValue();
-        assertThat(saved.getUsername()).isEqualTo("nadeesha");
+        assertThat(saved.getUsername()).isEqualTo("kirisha");
         assertThat(saved.getPassword()).isEqualTo("hashed");
         assertThat(saved.getRole()).isEqualTo(Role.STAFF);
     }
@@ -80,9 +80,9 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Rejects creating a staff account with a username that already exists")
     void rejectsDuplicateUsername() {
-        when(userRepository.existsByUsername("nadeesha")).thenReturn(true);
+        when(userRepository.existsByUsername("kirisha")).thenReturn(true);
 
-        assertThatThrownBy(() -> userService.create(new CreateUserRequest("nadeesha", "Passw0rd!", "Dup", "dup@sunrise.lk", Role.STAFF)))
+        assertThatThrownBy(() -> userService.create(new CreateUserRequest("kirisha", "Passw0rd!", "Dup", "dup@sunrise.lk", Role.STAFF)))
                 .isInstanceOf(DuplicateResourceException.class);
 
         verify(userRepository, never()).save(any());

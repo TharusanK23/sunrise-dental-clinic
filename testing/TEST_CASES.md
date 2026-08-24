@@ -5,20 +5,22 @@ Legend for **Type**: `POS` positive · `NEG` negative · `BND` boundary ·
 integration
 
 All statuses below are **PASS**, captured against the automated suite (see
-`testing/evidence/*.txt`, `Tests run: 25, Failures: 0, Errors: 0`) plus a
+`testing/evidence/*.txt`, `Tests run: 26, Failures: 0, Errors: 0`) plus a
 manual pass against the real MySQL/XAMPP instance per `docs/SETUP.md` §7.
 
 ## Authentication
 
 | ID | Type | Description | Steps | Expected Result | Automated In | Status |
 |---|---|---|---|---|---|---|
-| AUTH-01 | POS | Valid staff login succeeds | POST `/api/auth/login` with `nadeesha`/`Nadeesha@123` | `200 OK`, user JSON + `dc_token` HttpOnly cookie set | `AppointmentFlowIntegrationTest.fullAppointmentAndBillingFlow` (via `loginAndGetCookie()` helper) | PASS |
-| AUTH-02 | NEG | Wrong password rejected | POST `/api/auth/login` with `nadeesha`/`wrong-password` | `401 Unauthorized` | Manual (Postman "Login - Wrong Password") | PASS |
+| AUTH-01 | POS | Valid staff login succeeds | POST `/api/auth/login` with `kirisha`/`Kirisha@123` | `200 OK`, user JSON + signed JWT `token` in the body + `dc_token` HttpOnly cookie set | `AppointmentFlowIntegrationTest.fullAppointmentAndBillingFlow` (via `loginAndGetCookie()` helper) | PASS |
+| AUTH-08 | POS | The JWT returned in the login response body works as a Bearer token for a client that cannot use the HttpOnly cookie | Login, then GET `/api/appointments` with `Authorization: Bearer <token>` and no cookie | `200 OK` | `AppointmentFlowIntegrationTest.loginResponseTokenWorksAsBearerAuthorization` | PASS |
+| AUTH-09 | NEG | A tampered/invalid bearer token is rejected | GET `/api/appointments` with `Authorization: Bearer not-a-real-token` | `401 Unauthorized` (`JwtService.isTokenValid()` returns false, no authentication is populated) | Manual (curl) | PASS |
+| AUTH-02 | NEG | Wrong password rejected | POST `/api/auth/login` with `kirisha`/`wrong-password` | `401 Unauthorized` | Manual (Postman "Login - Wrong Password") | PASS |
 | AUTH-03 | NEG | Unknown username rejected | POST `/api/auth/login` with a non-existent username | `401 Unauthorized` (no user enumeration - same message as AUTH-02) | Manual (Postman "Login - Unknown User") | PASS |
 | AUTH-04 | VAL | Blank username/password rejected | POST `/api/auth/login` with `{"username":"","password":""}` | `400 Bad Request` with `validationErrors.username`/`.password` | Manual (Postman) | PASS |
 | AUTH-05 | NEG | Protected endpoint rejects an anonymous request | GET `/api/appointments` with no cookie | `401 Unauthorized` | `AppointmentFlowIntegrationTest.protectedEndpointRequiresAuthentication` | PASS |
 | AUTH-06 | POS | Logout clears the session | POST `/api/auth/logout`, then GET `/api/auth/me` | `204` then `401` on the follow-up call | Manual (Postman sequence) | PASS |
-| AUTH-07 | API | `ADMIN`-only endpoint rejects `STAFF` | Logged in as `nadeesha`, POST `/api/users` | `403 Forbidden` | Manual (Postman, role check) | PASS |
+| AUTH-07 | API | `ADMIN`-only endpoint rejects `STAFF` | Logged in as `kirisha`, POST `/api/users` | `403 Forbidden` | Manual (Postman, role check) | PASS |
 
 ## Register New Appointment
 
@@ -73,7 +75,7 @@ manual pass against the real MySQL/XAMPP instance per `docs/SETUP.md` §7.
 | DEN-01 | POS | Available-dentist search excludes conflicting appointments | GET `/api/dentists/available?appointmentDate=...&appointmentTime=...` after a booking exists for that exact slot | The booked dentist is excluded from results | Manual (Postman + UI walkthrough) | PASS |
 | DEN-02 | VAL | Reject a treatment type with a non-positive consultation fee | POST `/api/treatment-types` with `consultationFee: 0` | `400 Bad Request`, `validationErrors.consultationFee` | Manual (Postman) | PASS |
 | DEN-03 | NEG | Reject a duplicate treatment name | POST `/api/treatment-types` with a name already in use | `409 Conflict` (unique constraint) | Manual (Postman) | PASS |
-| DEN-04 | API | `ADMIN`-only delete on dentists/treatment types rejects `STAFF` | Logged in as `nadeesha`, DELETE `/api/dentists/1` | `403 Forbidden` | Manual (Postman, role check) | PASS |
+| DEN-04 | API | `ADMIN`-only delete on dentists/treatment types rejects `STAFF` | Logged in as `kirisha`, DELETE `/api/dentists/1` | `403 Forbidden` | Manual (Postman, role check) | PASS |
 
 ## Database-level tests (run directly against MySQL)
 
@@ -94,7 +96,7 @@ manual pass against the real MySQL/XAMPP instance per `docs/SETUP.md` §7.
 | USER-02 | NEG | Editing an unknown staff id returns 404 | `update(99L, ...)` | `ResourceNotFoundException` → `404 Not Found` | `UserServiceImplTest.rejectsUpdateForUnknownUser` | PASS |
 | USER-03 | VAL | Blank full name is rejected | PATCH with `{"fullName": "", "email": "x@sunrise.lk"}` | `400 Bad Request`, `validationErrors.fullName` | Manual (Postman + live curl, `docs/SETUP.md`) | PASS |
 | USER-04 | VAL | Invalid email format is rejected | PATCH with `{"fullName": "X", "email": "not-an-email"}` | `400 Bad Request`, `validationErrors.email` | Manual (Postman) | PASS |
-| USER-05 | API | `STAFF` role cannot edit staff accounts (Admin-only) | Logged in as `nadeesha` (STAFF), PATCH `/api/users/1` | `403 Forbidden` | Manual (Postman, role check; also verified live via curl) | PASS |
+| USER-05 | API | `STAFF` role cannot edit staff accounts (Admin-only) | Logged in as `kirisha` (STAFF), PATCH `/api/users/1` | `403 Forbidden` | Manual (Postman, role check; also verified live via curl) | PASS |
 | USER-06 | INT | End-to-end edit via the UI | Staff Accounts page → "Edit" on a row → change name/email → "Save Changes" | Modal closes, table refreshes with the new values, no page reload needed | Manual (screenshots `testing/screenshots/`) | PASS |
 | USER-07 | POS | Create a new staff account with a BCrypt-hashed password | `create(new CreateUserRequest(...))` | `passwordEncoder.encode` invoked, plaintext password never stored | `UserServiceImplTest.createsNewStaffAccount` | PASS |
 | USER-08 | NEG | Reject a duplicate username on account creation | `create(...)` with an already-taken username | `DuplicateResourceException` → `409 Conflict` | `UserServiceImplTest.rejectsDuplicateUsername` | PASS |
@@ -109,6 +111,6 @@ manual pass against the real MySQL/XAMPP instance per `docs/SETUP.md` §7.
 
 ---
 
-**Total automated test methods: 25** (run via `./mvnw test`; see
+**Total automated test methods: 26** (run via `./mvnw test`; see
 `testing/evidence/` for the captured passing output and `TEST_PLAN.md` §4
 for how each level of this matrix maps to a tool).

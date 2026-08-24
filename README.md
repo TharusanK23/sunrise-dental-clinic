@@ -30,7 +30,7 @@ SunriseDentalClinic/
 1. Start MySQL (XAMPP) and import database/schema.sql
 2. cd backend && ./mvnw.cmd spring-boot:run        (API on http://localhost:8082)
 3. Serve frontend/ via XAMPP Apache (or any static server) on http://localhost/sunrise-dental-clinic-client/
-4. Log in with admin / admin123 or nadeesha / Nadeesha@123
+4. Log in with admin / admin123 or kirisha / Kirisha@123
 ```
 
 Full details, including troubleshooting XAMPP-specific issues, are in

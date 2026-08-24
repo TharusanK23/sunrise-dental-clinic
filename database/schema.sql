@@ -263,11 +263,11 @@ FROM appointments a
 -- -----------------------------------------------------------------------------
 
 -- Default staff accounts. Passwords are BCrypt-hashed (never store plain text).
---   admin    / admin123      (ADMIN  - full access incl. dentist & staff management, all reports)
---   nadeesha / Nadeesha@123  (STAFF  - day-to-day appointment booking & billing operations)
+--   admin   / admin123      (ADMIN  - full access incl. dentist & staff management, all reports)
+--   kirisha / Kirisha@123   (STAFF  - day-to-day appointment booking & billing operations)
 INSERT INTO users (username, password, full_name, email, role, enabled, created_at) VALUES
-    ('admin',    '$2b$10$zwgNB3RDVPq3eEv9bFZLrOddSszZKXOckdK4aciQd30BItu86UXc6', 'System Administrator', 'admin@sunrisedentalclinic.lk',    'ADMIN', 1, NOW()),
-    ('nadeesha', '$2b$10$xZGu7fKLSP7Pj/xOUcWCie2RwePMlssOELJ0elV0X8hAYQiAyB6AS', 'Nadeesha Wickramasinghe', 'nadeesha@sunrisedentalclinic.lk', 'STAFF', 1, NOW());
+    ('admin',   '$2b$10$zwgNB3RDVPq3eEv9bFZLrOddSszZKXOckdK4aciQd30BItu86UXc6', 'System Administrator', 'admin@sunrisedentalclinic.lk',   'ADMIN', 1, NOW()),
+    ('kirisha', '$2b$10$0mPGnP8.YvU6ndFbRu6ZFO6JSy13UZli4gvAxg17ZrH70Qys8sLdS', 'Kirisha N', 'kirisha@sunrisedentalclinic.lk', 'STAFF', 1, NOW());
 
 INSERT INTO treatment_types (treatment_name, consultation_fee, description) VALUES
     ('Consultation',   2500.00, 'General dental check-up and consultation.'),

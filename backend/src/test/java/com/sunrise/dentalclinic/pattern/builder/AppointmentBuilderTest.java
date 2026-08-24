@@ -15,7 +15,7 @@ class AppointmentBuilderTest {
     private final Patient patient = Patient.builder().id(1L).fullName("Kasun Perera").address("Colombo").contactNumber("0771234567").build();
     private final Dentist dentist = Dentist.builder().id(1L).fullName("Dr. Silva").specialization("General").status(DentistStatus.AVAILABLE).build();
     private final TreatmentType treatmentType = TreatmentType.builder().id(1L).treatmentName("Scaling").consultationFee(java.math.BigDecimal.valueOf(2500)).build();
-    private final User staff = User.builder().id(1L).username("nadeesha").role(Role.STAFF).build();
+    private final User staff = User.builder().id(1L).username("kirisha").role(Role.STAFF).build();
 
     @Test
     @DisplayName("Builds a valid CONFIRMED appointment with a generated appointment number when all mandatory fields are supplied")

@@ -37,6 +37,7 @@ sequenceDiagram
         Jwt-->>Ctrl: signed JWT
 
         Ctrl->>Ctrl: set HttpOnly cookie "dc_token"
-        Ctrl-->>UI: 200 OK {user, expiresIn} + Set-Cookie: dc_token
+        Ctrl-->>UI: 200 OK {user, token, expiresIn} + Set-Cookie: dc_token
+        Note over UI,Ctrl: token is also returned in the JSON body -<br/>the browser client relies on the safer HttpOnly<br/>cookie, but a non-browser API client (Postman,<br/>curl, Swagger's Authorize button) uses this<br/>token as "Authorization: Bearer token" instead
         UI-->>Staff: redirect to dashboard.html
     end
