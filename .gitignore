@@ -1,0 +1,31 @@
+# Java / Maven
+backend/target/
+backend/backend-run.log
+*.class
+*.jar
+!backend/.mvn/wrapper/maven-wrapper.jar
+hs_err_pid*
+
+# Node tooling used only to export docs/ASSIGNMENT_REPORT.md to PDF/DOCX and to render Mermaid diagrams
+docs/node_modules/
+docs/_report_render.tmp.html
+diagrams/node_modules/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+backend/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment specific
+.env
