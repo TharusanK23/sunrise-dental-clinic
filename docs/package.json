@@ -1,0 +1,17 @@
+{
+  "name": "sunrise-dental-clinic-report-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One-off tooling to export docs/ASSIGNMENT_REPORT.md to brief-formatted docs/ASSIGNMENT_REPORT.pdf and .docx. Not part of the running application.",
+  "scripts": {
+    "build-pdf": "node generate-pdf.js",
+    "build-docx": "node generate-docx.js",
+    "build-all": "node generate-pdf.js && node generate-docx.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "docx": "^9.7.1",
+    "marked": "^18.0.10",
+    "puppeteer-core": "^25.8.0"
+  }
+}
