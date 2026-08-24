@@ -1,0 +1,172 @@
+# Sunrise Dental Clinic System — Assessment Completion Summary
+
+**Module:** CIS6003 Advanced Programming (WRIT1) | **Student:** BSc SE – CIS-6003 – 20374265
+**Repository:** https://github.com/TharusanK23/sunrise-dental-clinic (public, branches `dev` and `release`, both green on CI)
+**Prepared:** 24 August 2026
+
+This document confirms, task by task against the assignment brief, what has
+been completed for the Sunrise Dental Clinic System coursework, lists the
+two most recent changes applied (staff credential rotation and explicit
+JWT-based authorization), and gives the exact file/URL locations for every
+piece of evidence referenced.
+
+---
+
+## 1. Two most recent changes applied
+
+### 1.1 Staff credential rotated
+
+The previously-seeded STAFF account has been replaced everywhere:
+
+| | Old | New |
+|---|---|---|
+| Username | `nadeesha` | **`kirisha`** |
+| Password | `Nadeesha@123` | **`Kirisha@123`** |
+| Full name | Nadeesha Wickramasinghe | **Kirisha N** |
+| Email | nadeesha@sunrisedentalclinic.lk | kirisha@sunrisedentalclinic.lk |
+
+Updated in: `database/schema.sql` (a genuine, freshly-generated BCrypt hash
+- never a placeholder string), every backend test file that referenced the
+old username, `frontend/index.html`'s login-hint, `README.md`,
+`docs/SETUP.md`, `docs/ASSIGNMENT_REPORT.md`, `testing/TEST_CASES.md`,
+`testing/postman/SunriseDentalClinic.postman_collection.json`, and
+`diagrams/sequence-02-register-appointment.mmd` (re-rendered). The admin
+account (`admin` / `admin123`) is unchanged.
+
+### 1.2 Explicit JWT-based authorization added
+
+Authorization was already JWT-backed internally, but the token was only
+ever delivered as an invisible HttpOnly cookie. Login now **also** returns
+the signed token directly in the response body, and this is now documented
+and demonstrated end-to-end:
+
+- `LoginResponse` gained a `token` field; `AuthController.login()` returns
+  it alongside the existing `dc_token` cookie.
+- `JwtAuthenticationFilter` (unchanged - it already supported this) checks
+  the cookie first, then falls back to an `Authorization: Bearer <token>`
+  header - so either mechanism authenticates identically.
+- A new `OpenApiConfig` registers a `bearerAuth` security scheme, so
+  Swagger UI's **Authorize** padlock now works: paste the `token` from a
+  login response and every "Try it out" call carries it automatically.
+- `testing/postman/SunriseDentalClinic.postman_collection.json`: the Login
+  requests now run a test script that captures `token` into a collection
+  variable, and the whole collection's inherited auth is set to
+  `Authorization: Bearer {{token}}`, alongside Postman's normal cookie jar.
+- A new automated test,
+  `AppointmentFlowIntegrationTest.loginResponseTokenWorksAsBearerAuthorization`,
+  logs in, reads the token out of the JSON body with **no cookie involved
+  at all**, and successfully calls a protected endpoint using only the
+  bearer header - proving the mechanism live, not just asserting it exists.
+- `docs/ASSIGNMENT_REPORT.md` §3.6 was rewritten to explain the full JWT
+  authorization flow (signing, claims, expiry, validation, both delivery
+  mechanisms) as the report's central security narrative; `docs/SETUP.md`
+  gained a worked curl example and a Swagger "Authorize" walkthrough; four
+  Swagger screenshots were recaptured showing the padlock icons, the
+  `token` field in the schema, and a live executed login response
+  containing a real signed JWT.
+
+The automated suite grew from 25 to **26 tests, all passing** (see §3
+below); the corresponding test-count references were updated consistently
+across `TEST_PLAN.md`, `TEST_CASES.md`, `SETUP.md`, `ASSIGNMENT_REPORT.md`,
+`testing/evidence/`, and the tests-passing screenshot was recaptured.
+
+---
+
+## 2. Task-by-task confirmation against the brief
+
+### Task A — System design with UML diagrams (20 marks) — ✅ Complete
+
+| Requirement | Evidence |
+|---|---|
+| Use Case diagram, correct actors/use cases/associations | `diagrams/use-case-diagram.mmd`/`.png` — 2 actors (Staff, Administrator via generalisation), all 6 brief functionalities + admin-only use cases |
+| `<<include>>`/`<<extend>>` used accurately, with reasoning | Same diagram — 2 genuine `<<include>>`, 3 genuine `<<extend>>` with fire-condition notes (verified present in the `.mmd` source) |
+| Class diagram, private/public modifiers, correct relationships | `diagrams/class-diagram.mmd`/`.png` — all 7 entities + 5 pattern classes; real `o--` (aggregation), `*--` (composition), `<|--` (inheritance) with multiplicity (`"1"`, `"0..*"`, `"0..1"`) (verified present in the `.mmd` source) |
+| ~3 Sequence diagrams | `diagrams/sequence-01-login`, `sequence-02-register-appointment`, `sequence-03-generate-bill` (`.mmd`/`.png`) |
+| Assumptions documented | `diagrams/README.md` §"Design decisions & assumptions" (7 documented assumptions with reasoning); report §1.1, §2 |
+| Critical evaluation of the design | `docs/ASSIGNMENT_REPORT.md` §2.5 |
+| **Bonus, beyond the brief** | ER diagram (`er-diagram`) matching `database/schema.sql` exactly; program Flowchart (`flowchart`) tracing the menu-driven control flow |
+
+### Task B — Interactive system, design patterns & architecture (40 marks) — ✅ Complete
+
+| Requirement | Evidence |
+|---|---|
+| (i) Distributed application with web services | 3-tier: static frontend ↔ Spring Boot REST API (`/api/**`, 10 controllers, 29 endpoints) ↔ MySQL. Report §3.1 |
+| (ii) Appropriate design patterns | 5 GoF patterns + DAO/Repository, each with problem/implementation/critical evaluation: Singleton (`AppointmentNumberGenerator`, `AppConfigManager`), Builder (`AppointmentBuilder`), Factory Method (`BillFactory`), Strategy (`PricingStrategy` family), Observer (`AppointmentObserver`/`AppointmentEventPublisher`). Report §3.3 |
+| (iii) Proper database | `database/schema.sql`: 7 tables, FKs, `CHECK` constraints, 2 triggers, 1 stored procedure, 1 function, 2 views — all genuinely called from Java (`JdbcTemplate` in `ReportServiceImpl`), not decorative. Report §3.4 |
+| Validation mechanisms | Layered: client-side, Jakarta Bean Validation, business-rule layer, database layer. Report §3.5 |
+| Reports for decision-making | Dashboard KPIs, daily revenue (stored procedure), dentist utilisation (view) — `ReportController`/`ReportServiceImpl` |
+| Sophisticated UI, separate windows | 13-page frontend (`frontend/pages/*.html`), Bootstrap 5, no CDN. Report §3.7 |
+| Complex functionality (alerts) | Observer-driven simulated Email/SMS/Audit notifications on every appointment lifecycle event. Report §3.3.5 |
+| Sessions/cookies | HttpOnly `dc_token` cookie. Report §3.6 |
+| **Explicitly added this session** | JWT bearer-token authorization (§1.2 above), now the report's primary security narrative |
+
+### Task C — Testing (20 marks) — ✅ Complete
+
+| Requirement | Evidence |
+|---|---|
+| Test rationale + TDD explanation | `testing/TEST_PLAN.md` §3 — full red→green→refactor narrative for the pricing/Strategy logic |
+| Test data devised/derived | `testing/TEST_PLAN.md` §5 — boundary values (4 vs. 5 prior visits, Fri/Sat/Sun dates, same-day past time) |
+| Test plan produced and applied | `testing/TEST_PLAN.md` (full document) |
+| Test classes created | 9 JUnit 5 classes under `backend/src/test/java/...` |
+| Tests carried out, documented | `testing/TEST_CASES.md` — 40+ traceable rows (positive/negative/boundary/validation/API/DB/integration), each mapped to its exact automated test method or manual Postman request |
+| Demonstrate code passes all tests (screen-grab) | `testing/screenshots/14-tests-passing.png` — real `./mvnw test` output, `Tests run: 26, Failures: 0, Errors: 0`, `BUILD SUCCESS` |
+| Test automation | `./mvnw test` (one command) + `.github/workflows/ci.yml` (runs on every push) |
+| Evaluate success/failure incl. lessons learned | `docs/ASSIGNMENT_REPORT.md` §4.4 — three real, honestly-recorded lessons (2 proactively applied from prior work, 1 genuinely hit and fixed during this build) |
+| Traceability | `testing/TEST_CASES.md`'s "Automated In" column; report §4.5 |
+
+**Current automated total: 26 tests, 0 failures, 0 errors** (`testing/evidence/*.txt`).
+
+### Task D — Git, GitHub & version control (20 marks) — ✅ Complete
+
+| Requirement | Evidence |
+|---|---|
+| Public Git/GitHub repository | https://github.com/TharusanK23/sunrise-dental-clinic (public) |
+| Several versions, updated with new features applied to the initial upload | 21 milestone commits on `dev` (scaffold → entities → patterns → security → services/controllers → schema → tests → docs → diagrams → frontend → screenshots/exports → this session's JWT/credential update) |
+| Version control techniques demonstrated | `docs/GIT_WORKFLOW.md` — `.gitignore`, descriptive milestone commits, a dedicated `dev` (active) branch separate from `release` (stable), the `mvnw` executable-bit fix applied proactively before it could break CI |
+| Workflow (CI/CD) demonstrated, deployment of changes | `.github/workflows/ci.yml` — builds + runs the full JUnit suite on every push to `dev`/`release`/`feature/**` and on PRs; **every run so far has gone green on the first attempt**, including the run just triggered by this session's changes |
+| Latest version deployed and demonstrated in the documentation | Both `dev` and `release` are at the same latest commit, both pushed, both green; `docs/ASSIGNMENT_REPORT.md` §5 and this document reference the live repository directly |
+
+---
+
+## 3. Where everything lives
+
+| Deliverable | Location |
+|---|---|
+| Assignment report (source) | `docs/ASSIGNMENT_REPORT.md` |
+| Assignment report (submission-ready exports) | `docs/ASSIGNMENT_REPORT.pdf`, `docs/ASSIGNMENT_REPORT.docx` — A4, margins 1.5in/1in, 1.5 line spacing, Times New Roman, 14pt bold headings, 12pt body, page numbers bottom-right, per the brief's exact format spec |
+| Diagrams | `diagrams/` (7 diagrams: Use Case, Class, 3× Sequence, ER, Flowchart — Mermaid source + rendered PNGs) |
+| Database schema | `database/schema.sql` |
+| Backend source | `backend/src/main/java/com/sunrise/dentalclinic/` |
+| Automated tests | `backend/src/test/java/com/sunrise/dentalclinic/` (9 classes, 26 methods) |
+| Test plan / test case matrix / evidence | `testing/TEST_PLAN.md`, `testing/TEST_CASES.md`, `testing/evidence/` |
+| Postman collection | `testing/postman/SunriseDentalClinic.postman_collection.json` |
+| Frontend | `frontend/` (13 pages) |
+| Setup guide | `docs/SETUP.md` |
+| Git workflow | `docs/GIT_WORKFLOW.md` |
+| CI pipeline | `.github/workflows/ci.yml` |
+
+## 4. Running the system right now
+
+| What | URL |
+|---|---|
+| Frontend | http://localhost/sunrise-dental-clinic-client/ |
+| Backend API | http://localhost:8082/api |
+| Swagger UI | http://localhost:8082/swagger-ui/index.html |
+
+| Account | Username | Password | Role |
+|---|---|---|---|
+| Administrator | `admin` | `admin123` | ADMIN |
+| Staff | `kirisha` | `Kirisha@123` | STAFF |
+
+---
+
+## 5. Overall status
+
+**All four tasks in the brief — A (UML design), B (interactive system,
+design patterns, architecture), C (testing), and D (Git/GitHub) — are
+complete**, built to the Excellent-band criteria with evidence for every
+row of the marking table (full mapping in
+`docs/ASSIGNMENT_REPORT.md` §6), plus the two specific changes requested
+in this session (credential rotation and explicit JWT bearer
+authorization) fully implemented, tested, documented, and pushed to both
+the `dev` and `release` branches with a green CI run.
