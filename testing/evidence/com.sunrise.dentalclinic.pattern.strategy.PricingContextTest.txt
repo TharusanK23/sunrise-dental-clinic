@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.sunrise.dentalclinic.pattern.strategy.PricingContextTest
+-------------------------------------------------------------------------------
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in com.sunrise.dentalclinic.pattern.strategy.PricingContextTest
