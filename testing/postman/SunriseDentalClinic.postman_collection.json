@@ -1,0 +1,323 @@
+{
+  "info": {
+    "name": "Sunrise Dental Clinic API",
+    "description": "CIS6003 coursework - Sunrise Dental Clinic System REST API. Run 'Auth > Login (Staff)' first; Postman's cookie jar then keeps every subsequent request authenticated automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8082/api" },
+    { "key": "appointmentNumber", "value": "APT-2026-000001" },
+    { "key": "billNumber", "value": "INV-2026-000001" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (Staff)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"nadeesha\",\n  \"password\": \"Nadeesha@123\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - Wrong Password (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"nadeesha\",\n  \"password\": \"wrong-password\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - Unknown User (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"doesnotexist\",\n  \"password\": \"whatever123\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - Blank Fields (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"\",\n  \"password\": \"\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Current User (/me)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" }
+        },
+        {
+          "name": "Logout",
+          "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout" }
+        },
+        {
+          "name": "Protected Endpoint Without Login (expect 401)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/appointments" }
+        }
+      ]
+    },
+    {
+      "name": "Treatment Types",
+      "item": [
+        { "name": "List Treatment Types", "request": { "method": "GET", "url": "{{baseUrl}}/treatment-types" } },
+        {
+          "name": "Create Treatment Type",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"treatmentName\": \"Teeth Whitening\",\n  \"consultationFee\": 8000,\n  \"description\": \"Cosmetic whitening treatment\"\n}" },
+            "url": "{{baseUrl}}/treatment-types"
+          }
+        },
+        {
+          "name": "Create Treatment Type - Invalid Fee (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"treatmentName\": \"Free Sample\",\n  \"consultationFee\": 0,\n  \"description\": \"Invalid\"\n}" },
+            "url": "{{baseUrl}}/treatment-types"
+          }
+        },
+        {
+          "name": "Delete Treatment Type As STAFF (expect 403)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/treatment-types/1" }
+        }
+      ]
+    },
+    {
+      "name": "Dentists",
+      "item": [
+        { "name": "List Dentists", "request": { "method": "GET", "url": "{{baseUrl}}/dentists" } },
+        {
+          "name": "Available Dentists (date/time)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/dentists/available?appointmentDate=2026-09-01&appointmentTime=09:00:00" }
+        },
+        {
+          "name": "Create Dentist",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Dr. Nimal Jayasuriya\",\n  \"specialization\": \"Orthodontics\",\n  \"contactNumber\": \"0712223344\"\n}" },
+            "url": "{{baseUrl}}/dentists"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        { "name": "List Patients", "request": { "method": "GET", "url": "{{baseUrl}}/patients" } },
+        { "name": "Search Patients", "request": { "method": "GET", "url": "{{baseUrl}}/patients?search=Perera" } }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        { "name": "List Appointments", "request": { "method": "GET", "url": "{{baseUrl}}/appointments" } },
+        {
+          "name": "Register - New Patient",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientFullName\": \"Kasun Perera\",\n  \"patientAddress\": \"12 Galle Road, Colombo 03\",\n  \"patientContactNumber\": \"0771234567\",\n  \"patientEmail\": \"kasun@example.com\",\n  \"dentistId\": 1,\n  \"treatmentTypeId\": 1,\n  \"appointmentDate\": \"2026-09-01\",\n  \"appointmentTime\": \"09:00:00\",\n  \"notes\": \"First visit\"\n}"
+            },
+            "url": "{{baseUrl}}/appointments"
+          }
+        },
+        {
+          "name": "Register - Existing Patient",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": 1,\n  \"dentistId\": 2,\n  \"treatmentTypeId\": 2,\n  \"appointmentDate\": \"2026-09-10\",\n  \"appointmentTime\": \"10:00:00\"\n}"
+            },
+            "url": "{{baseUrl}}/appointments"
+          }
+        },
+        {
+          "name": "Register - Double Booking (expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientFullName\": \"Another Patient\",\n  \"patientAddress\": \"Kandy\",\n  \"patientContactNumber\": \"0759998888\",\n  \"dentistId\": 1,\n  \"treatmentTypeId\": 1,\n  \"appointmentDate\": \"2026-09-01\",\n  \"appointmentTime\": \"09:00:00\"\n}"
+            },
+            "url": "{{baseUrl}}/appointments"
+          }
+        },
+        {
+          "name": "Register - Invalid Contact Number (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientFullName\": \"Bad Data\",\n  \"patientAddress\": \"Colombo\",\n  \"patientContactNumber\": \"abc\",\n  \"dentistId\": 1,\n  \"treatmentTypeId\": 1,\n  \"appointmentDate\": \"2026-09-01\",\n  \"appointmentTime\": \"09:00:00\"\n}"
+            },
+            "url": "{{baseUrl}}/appointments"
+          }
+        },
+        {
+          "name": "Register - Missing Patient Details (expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dentistId\": 1,\n  \"treatmentTypeId\": 1,\n  \"appointmentDate\": \"2026-09-01\",\n  \"appointmentTime\": \"09:00:00\"\n}"
+            },
+            "url": "{{baseUrl}}/appointments"
+          }
+        },
+        {
+          "name": "Search Appointment by Number",
+          "request": { "method": "GET", "url": "{{baseUrl}}/appointments/{{appointmentNumber}}" }
+        },
+        {
+          "name": "Search Appointment - Not Found (expect 404)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/appointments/APT-2026-999999" }
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": { "method": "POST", "url": "{{baseUrl}}/appointments/{{appointmentNumber}}/cancel" }
+        },
+        {
+          "name": "Update Appointment Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"COMPLETED\"\n}" },
+            "url": "{{baseUrl}}/appointments/{{appointmentNumber}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bills",
+      "item": [
+        {
+          "name": "Generate / Fetch Bill",
+          "request": { "method": "GET", "url": "{{baseUrl}}/bills/appointment/{{appointmentNumber}}" }
+        },
+        {
+          "name": "Settle Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"paymentMethod\": \"Cash\"\n}" },
+            "url": "{{baseUrl}}/bills/{{billNumber}}/settle"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        { "name": "Dashboard Summary", "request": { "method": "GET", "url": "{{baseUrl}}/reports/dashboard" } },
+        { "name": "Daily Revenue Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/revenue?from=2026-01-01&to=2026-12-31" } },
+        { "name": "Dentist Utilisation Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/dentist-utilization" } }
+      ]
+    },
+    {
+      "name": "Staff Accounts (Admin only)",
+      "item": [
+        { "name": "List Staff (as Admin)", "request": { "method": "GET", "url": "{{baseUrl}}/users" } },
+        {
+          "name": "Create Staff Account (as Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"staff2\",\n  \"password\": \"staff456\",\n  \"fullName\": \"Second Staff\",\n  \"email\": \"staff2@sunrisedental.lk\",\n  \"role\": \"STAFF\"\n}" },
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "Create Staff Account As STAFF (expect 403)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"staff3\",\n  \"password\": \"staff789\",\n  \"fullName\": \"Third Staff\",\n  \"email\": \"staff3@sunrisedental.lk\",\n  \"role\": \"STAFF\"\n}" },
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "Update Staff Details - name & email (as Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Nadeesha K. Fernando\",\n  \"email\": \"nadeesha.fernando@sunrisedental.lk\"\n}" },
+            "url": "{{baseUrl}}/users/2"
+          }
+        },
+        {
+          "name": "Update Staff Details - Blank Name (expect 400)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"\",\n  \"email\": \"nadeesha@sunrisedental.lk\"\n}" },
+            "url": "{{baseUrl}}/users/2"
+          }
+        },
+        {
+          "name": "Update Staff Details - Invalid Email (expect 400)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Nadeesha Fernando\",\n  \"email\": \"not-an-email\"\n}" },
+            "url": "{{baseUrl}}/users/2"
+          }
+        },
+        {
+          "name": "Update Staff Details As STAFF (expect 403)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Hacked Name\",\n  \"email\": \"hacked@example.com\"\n}" },
+            "url": "{{baseUrl}}/users/1"
+          }
+        },
+        {
+          "name": "Update Staff Details - Unknown Id (expect 404)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Nobody\",\n  \"email\": \"nobody@example.com\"\n}" },
+            "url": "{{baseUrl}}/users/999"
+          }
+        },
+        {
+          "name": "Deactivate Staff Account (as Admin)",
+          "request": { "method": "PATCH", "url": "{{baseUrl}}/users/2/deactivate" }
+        }
+      ]
+    },
+    {
+      "name": "Misc",
+      "item": [
+        { "name": "Health Check (unauthenticated)", "request": { "method": "GET", "url": "{{baseUrl}}/health" } },
+        { "name": "Help Steps", "request": { "method": "GET", "url": "{{baseUrl}}/help" } }
+      ]
+    }
+  ]
+}
