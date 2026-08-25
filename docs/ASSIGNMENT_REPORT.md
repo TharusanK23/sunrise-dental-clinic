@@ -837,8 +837,6 @@ current state).
 
 ![GitHub repository - file tree, README, commit history](../testing/screenshots/11-github-repo.png)
 
-![GitHub Actions - Backend CI run history](../testing/screenshots/13-github-actions.png)
-
 ---
 
 ## 6. Self-evaluation against the Excellent (70–100) marking criteria
@@ -991,5 +989,5 @@ ER, Flowchart).
 embedded inline above rather than repeated here — see §3.7 (UI: login,
 dashboard, register-appointment, appointment detail, receipt, dentist
 management, reports, Swagger UI), §4.2 (`./mvnw test` passing), and §5
-(GitHub repository, commit history, Actions CI run). Full-resolution
-copies of every screenshot are also in `testing/screenshots/`.
+(GitHub repository, commit history). Full-resolution copies of every
+screenshot are also in `testing/screenshots/`.
