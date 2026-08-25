@@ -422,25 +422,62 @@ only strictly need the `my.ini` fix to run this system.
 committed, ready-to-submit exports of `docs/ASSIGNMENT_REPORT.md`, already
 formatted to the brief's spec (A4, margins 1.5in/1in, 1.5 line spacing,
 Times New Roman, 14pt bold headings, 12pt body, page numbers bottom-right)
-with every diagram and screenshot embedded. If you edit the report or
-capture new screenshots, regenerate one or both:
+with every diagram and screenshot embedded. Both files are prefixed with
+the same four sections in the same order: (1) the university's official
+Assignment Cover Sheet — reproduced as live, editable content, not a
+picture, on its own US-Letter-size section — (2) a title/cover page in
+Sunrise Dental Clinic's own brand colours, (3) a navigable Table of
+Contents, then (4) the report body proper.
+
+The DOCX and PDF are built by two independent pipelines that don't share a
+rendering engine, because Word's own PDF export (`SaveAs2` /
+`wdFormatPDF`) proved unreliable for a document this large and
+image-heavy — it hung indefinitely in testing. So the PDF is produced
+by Puppeteer/Chrome instead, and the two pipelines are kept in sync by hand
+(same cover sheet source, same title-page copy/colours, same heading
+structure) rather than by one generating the other. If you edit the report
+or capture new screenshots, regenerate both:
 
 ```
 cd docs
-npm install          # first time only - installs marked, puppeteer-core, docx
-node generate-pdf.js   # -> ASSIGNMENT_REPORT.pdf  (renders via headless Chrome)
-node generate-docx.js  # -> ASSIGNMENT_REPORT.docx (native Word document via the `docx` library)
+npm install          # first time only - installs marked, puppeteer-core, docx, pdfjs-dist
+node generate-docx.js                                    # -> ASSIGNMENT_REPORT.docx (report body only)
+powershell -ExecutionPolicy Bypass -File merge-cover-sheet.ps1   # merges in cover sheet + title page + TOC
+node generate-pdf.js                                      # -> ASSIGNMENT_REPORT.pdf  (renders via headless Chrome)
 ```
+
+`generate-docx.js` parses the Markdown into a token tree (via `marked`'s
+lexer) and builds native Word paragraphs, tables and embedded images
+directly, so the `.docx` opens as a real Word document in Microsoft Word /
+LibreOffice / Google Docs, not an HTML file renamed — but on its own it
+only produces the report body (starting at "CIS6003 Advanced Programming —
+Assignment Report"), with no cover sheet, title page or TOC yet.
+
+`merge-cover-sheet.ps1` finishes the DOCX: it drives Microsoft Word via COM
+automation (Windows only, and Word must be installed) to copy the official
+`Assignment cover sheet.docx` (expected at the repo's parent folder — see
+`$coverPath` at the top of the script if it has moved) into a new
+Letter-size section at the very start of the document with its original
+formatting fully preserved and still editable, types in a title page using
+the brand palette from `frontend/assets/css/styles.css`, and inserts a
+native Word Table of Contents field (Heading 2–4, hyperlinked) — all
+without touching the report body Word already generated.
 
 `generate-pdf.js` requires a local Chrome install (default path inside the
 script; override with the `CHROME_PATH` environment variable if yours is
-elsewhere). `generate-docx.js` has no such dependency — it parses the
-Markdown into a token tree (via `marked`'s lexer) and builds native Word
-paragraphs, tables and embedded images directly, so the `.docx` opens as a
-real Word document in Microsoft Word / LibreOffice / Google Docs, not an
-HTML file renamed. Both are one-off documentation tools, not part of the
-running application — Node.js is not otherwise required anywhere in this
-project.
+elsewhere). It builds the same four sections as HTML/CSS (the cover sheet
+as two page-image screenshots in `docs/assets/`, since a PDF is already a
+flattened, non-editable format so there's no live-content requirement to
+meet there) and prints via headless Chrome. The Table of Contents needs
+real page numbers, which don't exist until the document is paginated, so
+it renders twice: pass 1 produces a PDF with TOC entries as plain links
+with no numbers, `pdfjs-dist` then scans that PDF's link annotations to
+resolve each heading to its actual page number, and pass 2 re-renders the
+full document with those numbers baked into the TOC.
+
+Both are one-off documentation tools, not part of the running
+application — Node.js (and, for the DOCX merge step, Word) is not
+otherwise required anywhere in this project.
 
 To capture fresh screenshots first, log into the client at
 `http://localhost/sunrise-dental-clinic-client/` (§5) and screenshot each

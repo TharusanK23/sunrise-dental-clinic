@@ -1,15 +1,16 @@
 # Sunrise Dental Clinic System — Assessment Completion Summary
 
-**Module:** CIS6003 Advanced Programming (WRIT1) | **Student:** BSc SE – CIS-6003 – 20374265
+**Module:** CIS6003 Advanced Programming (WRIT1) | **Student:** Kirisha | **ID:** JF/BSCSD/19/33 | **Course:** BSc SE (Top-Up)
 **Repository:** https://github.com/TharusanK23/sunrise-dental-clinic (public, branches `dev` and `release`, both green on CI)
 **Prepared:** 24 August 2026 | **Last updated:** 25 August 2026
 
 This document confirms, task by task against the assignment brief, what has
 been completed for the Sunrise Dental Clinic System coursework, lists the
 most recent changes applied (staff credential rotation, explicit JWT-based
-authorization, and a full report-format validation with the official
-cover sheet added), and gives the exact file/URL locations for every piece
-of evidence referenced.
+authorization, a full report-format validation, and an official cover
+sheet, title page and navigable Table of Contents added ahead of the
+report), and gives the exact file/URL locations for every piece of
+evidence referenced.
 
 ---
 
@@ -101,28 +102,49 @@ XML shows `w:pgSz` = A4, `w:pgMar` = exactly 1440/1440/1440/2160 twips
 (captions only), and zero remaining Consolas references. The PDF was
 visually re-inspected page by page via a headless-Chrome screenshot.
 
-**The official university cover sheet was also added as the report's
-first pages - as an exact, unmodified copy, not a restyled
-reproduction.** An initial attempt transcribed the cover sheet into
-Markdown tables, which inherited the report's own Times New Roman/12pt
-formatting - explicitly not what was wanted, and corrected in a follow-up
-pass: `Assignment cover sheet.docx` (found at the OnlineVehicleReservation
-project root) was exported to XPS via Word and each page rasterised
-directly at 220dpi (bypassing any browser/viewer chrome), producing
-`docs/assets/cover-sheet-page-1.png` and `-page-2.png` - pixel-exact
-copies carrying the original's own fonts, colours, table borders and
-layout untouched. These are embedded as the report's first two pages,
-followed by an explicit page break so the report proper (§1 Introduction
-onward) still starts cleanly on its own page. Every field is exactly as
-blank as the source template - only the institution-prefilled fields
-(Unit code CIS6003, Unit title, Year 3, Mode of delivery Full Time,
-Nature of the Assessment "Course work 100%", Learning Outcomes "1,2,3")
-are filled in, matching the original exactly. Fields only the student can
-supply - **Name, Student ID, Study period, Lecturer, Topic of the Case
-Study, Word count, Due date/Time, and the signed Declaration** - remain
-blank for the student to complete, since inventing any of this on an
-official declaration would be a genuine correctness problem, not a
-convenience.
+**The official university cover sheet, a title/cover page, and a
+navigable Table of Contents were also added ahead of the report body.**
+Two earlier approaches were tried and rejected for the cover sheet before
+landing on the final one. The first transcribed it into Markdown tables,
+which inherited the report's own Times New Roman/12pt formatting -
+explicitly not what was wanted. The second rasterised the original
+`Assignment cover sheet.docx` to pixel-exact PNG images - visually
+perfect, but flagged as the wrong approach because a cover sheet is a
+**form**: the institution and the student both need to actually fill
+fields in it, and a picture can't be filled in. The final approach uses
+Microsoft Word COM automation (`docs/merge-cover-sheet.ps1`) to copy the
+original cover sheet's real content - the actual table cells, styles and
+formatting, not a picture of them - into its own Letter-size section at
+the very start of the DOCX, so it opens as genuinely fillable Word content
+identical in appearance to the source. Every field is exactly as blank as
+the source template - only the institution-prefilled fields (Unit code
+CIS6003, Unit title, Year 3, Mode of delivery Full Time, Nature of the
+Assessment "Course work 100%", Learning Outcomes "1,2,3") are filled in,
+matching the original exactly. Fields only the student can supply -
+**Name, Student ID, Study period, Lecturer, Topic of the Case Study, Word
+count, Due date/Time, and the signed Declaration** - remain blank for the
+student to complete, since inventing any of this on an official
+declaration would be a genuine correctness problem, not a convenience.
+
+Immediately after the cover sheet, a title/cover page was added (Sunrise
+Dental Clinic's own brand palette from `frontend/assets/css/styles.css` -
+navy/teal/amber - rather than an unrelated colour scheme, and no logo, per
+the brief given for it): "Sunrise Dental Clinic System" as the title,
+student name Kirisha, student ID JF/BSCSD/19/33, course BSc SE (Top-Up),
+submission date, "International College of Business and Technology (ICBT)
+- Jaffna" with "Cardiff Metropolitan University" underneath as the
+affiliated awarding university, and a short project-relevant description
+in place of placeholder text. A genuinely navigable Table of Contents
+follows (Heading 2-4): a native Word TOC field in the `.docx` (Ctrl+click
+to jump, updates automatically if headings move), and real clickable
+internal links with correctly resolved page numbers in the `.pdf` - the
+PDF pipeline renders the document twice, once to discover which page each
+heading lands on and once with those numbers baked into the TOC, since
+they don't exist until the document is paginated. `docs/SETUP.md` §11 has
+the full three-command regeneration process (`generate-docx.js` →
+`merge-cover-sheet.ps1` → `generate-pdf.js`) and why the DOCX and PDF are
+now built by two independent pipelines rather than one generating the
+other (Word's own PDF export hung indefinitely on this document).
 
 ### 1.4 Originality / plagiarism review
 

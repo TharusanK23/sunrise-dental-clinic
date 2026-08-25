@@ -1,19 +1,3 @@
-![Assignment Cover Sheet - page 1 of 2, exact copy of the university's "Assignment cover sheet.docx" template](assets/cover-sheet-page-1.png)
-
-<div class="pagebreak"></div>
-
-![Assignment Cover Sheet - page 2 of 2](assets/cover-sheet-page-2.png)
-
-*The two pages above are an unmodified, pixel-exact copy of the university's
-official "Assignment cover sheet.docx" template - rendered directly from
-that file, not retyped or restyled. Its blank fields (Name, Student ID,
-Study period, Lecturer, Topic of the Case Study, Word count, Due date/Time,
-and the signed Declaration) are exactly as blank in the source template and
-must be completed and the declaration physically/digitally signed before
-submission.*
-
-<div class="pagebreak"></div>
-
 # CIS6003 Advanced Programming — Assignment Report
 
 **Assessment:** Sunrise Dental Clinic System (WRIT1) | **Weighting:** 100%
