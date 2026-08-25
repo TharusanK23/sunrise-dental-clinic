@@ -1,0 +1,55 @@
+# Production profile for the live Render deployment. Activated via
+# SPRING_PROFILES_ACTIVE=render (set in render.yaml). Render has no managed
+# MySQL, so this profile targets the PostgreSQL database Render provisions
+# instead; local/XAMPP development (application.yml, no profile) is
+# completely unaffected by anything in this file - see docs/RENDER_DEPLOY.md.
+server:
+  port: ${PORT:8082}
+
+spring:
+  datasource:
+    # Render's Blueprint only exposes the DB's host/port/name/user/password
+    # individually (not a ready JDBC URL) - Spring's own placeholder
+    # resolution composes them into one here. See render.yaml.
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # schema is owned by Flyway (db/migration/postgres), not Hibernate auto-DDL
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/postgres
+
+app:
+  database:
+    type: postgres   # selects the "SELECT * FROM sp_daily_revenue_report(...)" syntax in ReportServiceImpl
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://sunrise-dental-clinic.onrender.com}
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration-ms: 3600000
+      cookie-name: dc_token
+  business:
+    tax-rate: 0.08
+    weekend-surcharge-rate: 0.15
+    loyalty-discount-visit-count: 5
+    loyalty-discount-rate: 0.10
+    currency-symbol: "Rs."
+
+logging:
+  level:
+    root: INFO
+    com.sunrise.dentalclinic: INFO
+  # No logging.file.name override: Render's ephemeral container filesystem
+  # makes a local log file harmless but pointless - Render captures
+  # stdout/stderr directly, which is what actually shows up in its dashboard.

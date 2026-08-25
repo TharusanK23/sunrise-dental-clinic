@@ -23,12 +23,17 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
     open-in-view: false
 
+  flyway:
+    enabled: false   # local/XAMPP dev uses database/schema.sql directly, not Flyway - see application-render.yml
+
   jackson:
     date-format: yyyy-MM-dd
     serialization:
       write-dates-as-timestamps: false
 
 app:
+  database:
+    type: mysql   # selects the CALL-based sp_daily_revenue_report syntax in ReportServiceImpl - "postgres" on Render
   cors:
     allowed-origins: "http://localhost,http://127.0.0.1,http://localhost:5501,http://127.0.0.1:5501,http://localhost:8082,http://localhost:63342"
   security:

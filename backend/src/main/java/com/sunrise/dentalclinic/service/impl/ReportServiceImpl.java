@@ -10,6 +10,7 @@ import com.sunrise.dentalclinic.repository.AppointmentRepository;
 import com.sunrise.dentalclinic.repository.DentistRepository;
 import com.sunrise.dentalclinic.repository.PatientRepository;
 import com.sunrise.dentalclinic.service.ReportService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,19 @@ public class ReportServiceImpl implements ReportService {
     private final DentistRepository dentistRepository;
     private final PatientRepository patientRepository;
     private final JdbcTemplate jdbcTemplate;
+
+    /**
+     * MySQL (local/XAMPP) exposes {@code sp_daily_revenue_report} as a
+     * {@code PROCEDURE}, invoked with {@code CALL}; the Render deployment's
+     * PostgreSQL database exposes the equivalent logic as a {@code FUNCTION}
+     * returning a table (Postgres procedures don't return result sets the
+     * way MySQL's do), invoked as a normal {@code SELECT}. Same column
+     * names either way, so the row-mapper below is unchanged - see
+     * {@code app.database.type} in application.yml / application-render.yml
+     * and database/schema.sql vs backend/src/main/resources/db/migration/postgres/V1__init.sql.
+     */
+    @Value("${app.database.type:mysql}")
+    private String databaseType;
 
     public ReportServiceImpl(AppointmentRepository appointmentRepository, DentistRepository dentistRepository,
                               PatientRepository patientRepository, JdbcTemplate jdbcTemplate) {
@@ -64,8 +78,11 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<RevenueReportItem> dailyRevenue(LocalDate from, LocalDate to) {
+        String sql = "postgres".equals(databaseType)
+                ? "SELECT * FROM sp_daily_revenue_report(?, ?)"
+                : "CALL sp_daily_revenue_report(?, ?)";
         return jdbcTemplate.query(
-                "CALL sp_daily_revenue_report(?, ?)",
+                sql,
                 (rs, rowNum) -> new RevenueReportItem(
                         rs.getDate("report_date").toString(),
                         rs.getBigDecimal("total_revenue"),

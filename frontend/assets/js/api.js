@@ -5,7 +5,15 @@
  * request is sent with `credentials: 'include'`. A 401 response means the session
  * cookie is missing/expired, so the user is bounced back to the login page.
  */
-const API_BASE = window.SDC_API_BASE || "http://localhost:8082/api";
+// Defaults to the local backend for localhost/XAMPP development; on the
+// live Render deployment (a *.onrender.com static site) it defaults to the
+// deployed backend service instead - either default can still be overridden
+// per-page by setting window.SDC_API_BASE before this script loads.
+const API_BASE = window.SDC_API_BASE || (
+    location.hostname.endsWith(".onrender.com")
+        ? "https://sunrise-dental-clinic-api.onrender.com/api"
+        : "http://localhost:8082/api"
+);
 
 class ApiError extends Error {
     constructor(status, body) {
