@@ -1,7 +1,7 @@
 # Sunrise Dental Clinic System — Assessment Completion Summary
 
 **Module:** CIS6003 Advanced Programming (WRIT1) | **Student:** Kirisha | **ID:** JF/BSCSD/19/33 | **Course:** BSc SE (Top-Up)
-**Repository:** https://github.com/KirishaTharusan/sunrise-dental-clinic (public, branches `dev` and `release`, both green on CI)
+**Repository:** https://github.com/TharusanK23/sunrise-dental-clinic (public, branches `dev` and `release`, both green on CI)
 **Prepared:** 24 August 2026 | **Last updated:** 25 August 2026
 
 This document confirms, task by task against the assignment brief, what has
@@ -226,7 +226,7 @@ worth knowing before submission:
 
 | Requirement | Evidence |
 |---|---|
-| Public Git/GitHub repository | https://github.com/KirishaTharusan/sunrise-dental-clinic (public) |
+| Public Git/GitHub repository | https://github.com/TharusanK23/sunrise-dental-clinic (public) |
 | Several versions, updated with new features applied to the initial upload | 21 milestone commits on `dev` (scaffold → entities → patterns → security → services/controllers → schema → tests → docs → diagrams → frontend → screenshots/exports → this session's JWT/credential update) |
 | Version control techniques demonstrated | `docs/GIT_WORKFLOW.md` — `.gitignore`, descriptive milestone commits, a dedicated `dev` (active) branch separate from `release` (stable), the `mvnw` executable-bit fix applied proactively before it could break CI |
 | Workflow (CI/CD) demonstrated, deployment of changes | `.github/workflows/ci.yml` — builds + runs the full JUnit suite on every push to `dev`/`release`/`feature/**` and on PRs; **every run so far has gone green on the first attempt**, including the run just triggered by this session's changes |

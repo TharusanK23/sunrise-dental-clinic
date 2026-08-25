@@ -10,7 +10,7 @@ single `main`, as directed for this project:
 | `dev` | The active integration branch. All day-to-day work (features, fixes, docs) is committed here first. This is the repository's default branch. |
 | `release` | The stable, submission-ready branch. Only fast-forwarded from `dev` at deliberate checkpoints once the code on `dev` builds cleanly and the full test suite is green — never committed to directly. |
 
-**Repository:** https://github.com/KirishaTharusan/sunrise-dental-clinic (public).
+**Repository:** https://github.com/TharusanK23/sunrise-dental-clinic (public).
 
 ## 1. What has been set up locally
 

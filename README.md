@@ -6,7 +6,7 @@ three-tier appointment and billing system with a Spring Boot REST API, a
 MySQL database (via XAMPP), and a static HTML/CSS/JS client.
 
 **Student:** Kirisha – JF/BSCSD/19/33 – BSc SE (Top-Up)
-**Repository:** https://github.com/KirishaTharusan/sunrise-dental-clinic
+**Repository:** https://github.com/TharusanK23/sunrise-dental-clinic
 
 > **Read [`docs/SETUP.md`](docs/SETUP.md) first** — it has the complete
 > install/run/test/troubleshoot walkthrough for localhost.
