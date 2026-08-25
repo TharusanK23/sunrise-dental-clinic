@@ -5,8 +5,8 @@ A full-stack Java coursework project for **CIS6003 Advanced Programming**
 three-tier appointment and billing system with a Spring Boot REST API, a
 MySQL database (via XAMPP), and a static HTML/CSS/JS client.
 
-**Student:** BSc SE – CIS-6003 – 20374265
-**Repository:** https://github.com/TharusanK23/sunrise-dental-clinic
+**Student:** Kirisha – JF/BSCSD/19/33 – BSc SE (Top-Up)
+**Repository:** https://github.com/KirishaTharusan/sunrise-dental-clinic
 
 > **Read [`docs/SETUP.md`](docs/SETUP.md) first** — it has the complete
 > install/run/test/troubleshoot walkthrough for localhost.

@@ -73,14 +73,21 @@ $word.Options.AutoFormatAsYouTypeReplaceHyperlinks = $false
 
 try {
     # ---- 1. Cover sheet ----
+    # Uses Range.FormattedText to transfer the cover sheet's content (with
+    # its original formatting) directly between the two open documents,
+    # instead of Copy()/PasteAndFormat() via the system clipboard - the
+    # clipboard proved unreliable (locked/unavailable) in some environments,
+    # and FormattedText avoids it entirely while producing the same result.
     $cover = $word.Documents.Open($coverPath, [ref]$false, [ref]$true)
-    $cover.Content.Copy()
-    $cover.Close([ref]$false)
+    $coverFormatted = $cover.Content.FormattedText
 
     $report = $word.Documents.Open($reportPath, [ref]$false, [ref]$false)
+    $insertRange = $report.Range(0, 0)
+    $insertRange.FormattedText = $coverFormatted
+    $cover.Close([ref]$false)
+
     $sel = $report.ActiveWindow.Selection
-    $sel.HomeKey($wdStory) | Out-Null
-    $sel.PasteAndFormat($wdFormatOriginalFormatting) | Out-Null
+    $sel.SetRange($insertRange.Start, $insertRange.End) | Out-Null
     $sel.Collapse($wdCollapseEnd) | Out-Null
     $sel.InsertBreak($wdSectionBreakNextPage) | Out-Null
 
@@ -95,15 +102,21 @@ try {
     Write-Host "Merged cover sheet ($($report.Sections.Count) sections)"
 
     # ---- 2. Title / cover page ----
-    # $sel is now at the very start of Section 2, which is still, at the
-    # paragraph-style level, the ORIGINAL "Heading 1" paragraph that used
-    # to be the report's own title (only its direct character formatting
-    # was pushed down by typing before it - the paragraph STYLE, including
-    # Heading 1's bottom border, is still inherited by every new paragraph
-    # mark created here until explicitly overridden). That inherited border
-    # is what caused a stray line to show up on whichever title-page
-    # paragraph happened to end a page. Resetting to "Normal" first fixes
-    # it at the source, rather than fighting individual symptoms of it.
+    # $sel is now at the very start of Section 2, still collapsed INSIDE
+    # the original "Heading 1" paragraph that is the report's own title
+    # ("CIS6003 Advanced Programming - Assignment Report") - no new
+    # paragraph mark exists yet at this point. Setting Selection.Style on a
+    # collapsed selection sets the style of the paragraph CONTAINING it, so
+    # doing that here directly demotes the report's own title from Heading
+    # 1 to Normal (found by rendering and comparing - the title silently
+    # lost its bold/border and became plain body text). InsertParagraphBefore()
+    # first creates a genuinely separate, empty paragraph ahead of the
+    # original one, so the style reset below applies to that new paragraph
+    # only, leaving the report's real title paragraph (now pushed further
+    # down, after all the title-page content) completely untouched.
+    $titleAnchor = $sel.Range.Start
+    $report.Range($titleAnchor, $titleAnchor).InsertParagraphBefore() | Out-Null
+    $sel.SetRange($titleAnchor, $titleAnchor) | Out-Null
     $sel.Style = $report.Styles.Item("Normal")
     $sel.Font.Name = "Times New Roman"
     $sel.Font.Color = 0
@@ -112,19 +125,54 @@ try {
     $sel.TypeParagraph() | Out-Null
     $sel.TypeParagraph() | Out-Null
 
+    # Word silently re-colours/de-italicises certain typed text (dates,
+    # slash-separated IDs, and - as found here - the trailing word of a
+    # recognised institution name like "...University") after the fact,
+    # overriding direct Font.Color/Font.Italic set beforehand - disabling
+    # AutoFormatAsYouTypeReplaceHyperlinks (above) does not stop it. The
+    # reliable fix is to go back over the just-typed range AFTER typing and
+    # force the character style (clearing any auto-applied style/field) and
+    # the intended formatting again. Defined here so it can be used for the
+    # university/affiliation lines below, not just the date/name/ID/course
+    # block further down.
+    function Restyle([object]$startPos, [double]$color, [bool]$bold = $false, [bool]$italic = $false) {
+        $endPos = $sel.Range.Start
+        $r = $report.Range($startPos, $endPos)
+        # If Word auto-inserted an actual Hyperlink field over this text,
+        # remove the field (keeps the visible text, drops the field/style).
+        for ($i = $r.Hyperlinks.Count; $i -ge 1; $i--) { $r.Hyperlinks.Item($i).Delete() | Out-Null }
+        $r.Style = $report.Styles.Item("Default Paragraph Font")
+        $r.Font.Color = $color
+        $r.Font.Bold = [int]$bold
+        $r.Font.Italic = [int]$italic
+    }
+
     $sel.Font.Size = 13
     $sel.Font.Bold = 1
     $sel.Font.Color = $colAmber
+    $icbtStart = $sel.Range.Start
     $sel.TypeText("International College of Business and Technology (ICBT) - Jaffna") | Out-Null
+    Restyle $icbtStart $colAmber $true
     $sel.TypeParagraph() | Out-Null
 
-    $sel.Font.Size = 12
-    $sel.Font.Bold = 0
-    $sel.Font.Italic = 1
-    $sel.Font.Color = $colMuted
-    $sel.TypeText("Cardiff Metropolitan University") | Out-Null
-    $sel.Font.Italic = 0
+    # Root cause of the "University" word losing its italic (found by
+    # bisecting with a minimal repro): setting Selection.Font.Italic on a
+    # COLLAPSED selection sitting exactly at the end of a just-inserted run
+    # retroactively splits off and de-formats that run's last word - not an
+    # AutoCorrect/AutoFormat effect at all. Range.InsertAfter() (rather than
+    # Selection.TypeText) is still used here to build the text without
+    # simulating keystrokes, but the actual fix is ordering: move the
+    # selection past a paragraph break BEFORE changing its Font, never while
+    # still collapsed at the boundary of the text just inserted.
+    $affRange = $report.Range($sel.Range.Start, $sel.Range.Start)
+    $affRange.InsertAfter("Cardiff Metropolitan University") | Out-Null
+    $affRange.Font.Size = 12
+    $affRange.Font.Bold = 0
+    $affRange.Font.Italic = 1
+    $affRange.Font.Color = $colMuted
+    $sel.SetRange($affRange.End, $affRange.End) | Out-Null
     $sel.TypeParagraph() | Out-Null
+    $sel.Font.Italic = 0
     $sel.TypeParagraph() | Out-Null
 
     $sel.Font.Size = 30
@@ -143,8 +191,12 @@ try {
     $sel.Font.Italic = 1
     $sel.Font.Color = $colMuted
     $sel.TypeText("Assignment Report - CIS6003 Advanced Programming (WRIT1)") | Out-Null
-    $sel.Font.Italic = 0
+    # Font changes on a collapsed selection must happen AFTER moving past a
+    # paragraph break, never while still collapsed at the end of the text
+    # just typed - see the note above the affiliation-line block for why
+    # (it silently de-italicises that text's last word otherwise).
     $sel.TypeParagraph() | Out-Null
+    $sel.Font.Italic = 0
     $sel.TypeParagraph() | Out-Null
 
     # A decorative accent bar (matching the PDF's gradient bar) was tried
@@ -161,26 +213,9 @@ try {
     $sel.Font.Color = $colText
     $sel.ParagraphFormat.Alignment = $wdAlignParagraphLeft
     $sel.TypeText("A full-stack, three-tier web application built to replace Sunrise Dental Clinic's paper-based booking process: a Spring Boot REST API secured with JWT authentication, a MySQL database with triggers/a stored procedure/views, five GoF design patterns, and a static HTML/CSS/JS client - covering appointment booking, patient records, dentist scheduling, and automated billing end-to-end.") | Out-Null
+    $sel.TypeParagraph() | Out-Null
     $sel.Font.Italic = 0
     $sel.TypeParagraph() | Out-Null
-    $sel.TypeParagraph() | Out-Null
-
-    # Word silently re-colours certain typed text (dates, slash-separated
-    # IDs) with its default hyperlink/smart-tag blue, overriding direct
-    # Font.Color set beforehand - disabling AutoFormatAsYouTypeReplaceHyperlinks
-    # (above) did not stop it. The reliable fix is to go back over the just-
-    # typed range AFTER typing and force both the character style (clearing
-    # any auto-applied "Hyperlink" style) and the colour again.
-    function Restyle([object]$startPos, [double]$color, [bool]$bold = $false) {
-        $endPos = $sel.Range.Start
-        $r = $report.Range($startPos, $endPos)
-        # If Word auto-inserted an actual Hyperlink field over this text,
-        # remove the field (keeps the visible text, drops the field/style).
-        for ($i = $r.Hyperlinks.Count; $i -ge 1; $i--) { $r.Hyperlinks.Item($i).Delete() | Out-Null }
-        $r.Style = $report.Styles.Item("Default Paragraph Font")
-        $r.Font.Color = $color
-        $r.Font.Bold = [int]$bold
-    }
 
     $sel.Font.Size = 12.5
     $sel.ParagraphFormat.Alignment = $wdAlignParagraphCenter
@@ -193,11 +228,17 @@ try {
     $sel.Font.Size = 12
     $sel.Font.Color = $colText
     $sel.ParagraphFormat.Alignment = $wdAlignParagraphLeft
+    # Note: no "$sel.Font.Bold = 0" between the label and value TypeText
+    # calls below (unlike an earlier version of this script) - that's the
+    # same collapsed-selection-adjacent-to-just-typed-text pattern that
+    # corrupted the affiliation line (see the note above it), and here it
+    # would corrupt the tail of the LABEL instead. Restyle() already forces
+    # the value's bold=false correctly via Range afterward, so the
+    # Selection-level reset isn't needed.
     $sel.Font.Bold = 1
     $lblStart = $sel.Range.Start
     $sel.TypeText("Student Name: ") | Out-Null
     Restyle $lblStart $colText $true
-    $sel.Font.Bold = 0
     $valStart = $sel.Range.Start
     $sel.TypeText("Kirisha") | Out-Null
     Restyle $valStart $colText
@@ -207,7 +248,6 @@ try {
     $lblStart = $sel.Range.Start
     $sel.TypeText("Student ID: ") | Out-Null
     Restyle $lblStart $colText $true
-    $sel.Font.Bold = 0
     $valStart = $sel.Range.Start
     $sel.TypeText("JF/BSCSD/19/33") | Out-Null
     Restyle $valStart $colText
@@ -217,7 +257,6 @@ try {
     $lblStart = $sel.Range.Start
     $sel.TypeText("Course: ") | Out-Null
     Restyle $lblStart $colText $true
-    $sel.Font.Bold = 0
     $valStart = $sel.Range.Start
     $sel.TypeText("BSc SE (Top-Up)") | Out-Null
     Restyle $valStart $colAmber

@@ -1,9 +1,9 @@
 # CIS6003 Advanced Programming — Assignment Report
 
 **Assessment:** Sunrise Dental Clinic System (WRIT1) | **Weighting:** 100%
-**Student:** BSc SE – CIS-6003 – 20374265
-**Submission title format:** `st20374265 CIS6003 WRIT1`
-**GitHub repository:** https://github.com/TharusanK23/sunrise-dental-clinic
+**Student:** Kirisha – JF/BSCSD/19/33 – BSc SE (Top-Up)
+**Submission title format:** `JF-BSCSD-19-33 CIS6003 WRIT1`
+**GitHub repository:** https://github.com/KirishaTharusan/sunrise-dental-clinic
 
 > **Formatting note:** this Markdown file is the source of truth for the
 > report's content. Submission-ready exports - `docs/ASSIGNMENT_REPORT.pdf`
@@ -829,7 +829,7 @@ was marked executable in the repository index (`git update-index
 wrapper was first committed, before the workflow ever ran.
 
 The repository has been pushed to
-**https://github.com/TharusanK23/sunrise-dental-clinic** (public, `dev` set
+**https://github.com/KirishaTharusan/sunrise-dental-clinic** (public, `dev` set
 as the default branch, with `release` fast-forwarded from `dev` once the
 full backend, tests, frontend, diagrams and documentation were in place and
 green — see the repository's commit history and branch list for the
@@ -866,7 +866,7 @@ current state).
 | Professional documentation with screenshots and clear explanations | This report; `docs/SETUP.md`; `diagrams/README.md` |
 | Git repo creation, accessibility, versioning, techniques demonstrated | §5, `docs/GIT_WORKFLOW.md` |
 | Workflow (CI/CD) demonstrated, with deployment of changes | §5, `.github/workflows/ci.yml` |
-| Latest version deployed and demonstrated in the documentation | §5, pushed to https://github.com/TharusanK23/sunrise-dental-clinic with a green CI run |
+| Latest version deployed and demonstrated in the documentation | §5, pushed to https://github.com/KirishaTharusan/sunrise-dental-clinic with a green CI run |
 
 ---
 
