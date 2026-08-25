@@ -102,23 +102,57 @@ XML shows `w:pgSz` = A4, `w:pgMar` = exactly 1440/1440/1440/2160 twips
 visually re-inspected page by page via a headless-Chrome screenshot.
 
 **The official university cover sheet was also added as the report's
-first page(s).** `Assignment cover sheet.docx` (found at the
-OnlineVehicleReservation project root) was extracted and faithfully
-reproduced in Markdown - Student Details, Scheduled Unit Details,
-Assignment Details, Declaration, Submission, and Result sections - as the
-new opening of `docs/ASSIGNMENT_REPORT.md`, followed by an explicit page
-break so the report proper (§1 Introduction onward) still starts cleanly
-on its own page. Known fields were filled in (Student ID 20374265, Unit
-code CIS6003, Unit title Advanced Programming, Year 3, Mode of delivery
-Full Time, Nature of the Assessment "Course work 100%", Topic of the Case
-Study, Learning Outcomes covered 1/2/3, Word count ≈6,970 excluding
-references/appendices per the brief's own word-count rule, Extension
-granted "No", Is this a resubmission "No"). Fields only the student can
-supply - **Name, Study period, Lecturer, Due date/Time, and the signed
-Declaration** - are left explicitly marked "to be completed by the
-student" rather than guessed, since inventing a name or date on an
+first pages - as an exact, unmodified copy, not a restyled
+reproduction.** An initial attempt transcribed the cover sheet into
+Markdown tables, which inherited the report's own Times New Roman/12pt
+formatting - explicitly not what was wanted, and corrected in a follow-up
+pass: `Assignment cover sheet.docx` (found at the OnlineVehicleReservation
+project root) was exported to XPS via Word and each page rasterised
+directly at 220dpi (bypassing any browser/viewer chrome), producing
+`docs/assets/cover-sheet-page-1.png` and `-page-2.png` - pixel-exact
+copies carrying the original's own fonts, colours, table borders and
+layout untouched. These are embedded as the report's first two pages,
+followed by an explicit page break so the report proper (§1 Introduction
+onward) still starts cleanly on its own page. Every field is exactly as
+blank as the source template - only the institution-prefilled fields
+(Unit code CIS6003, Unit title, Year 3, Mode of delivery Full Time,
+Nature of the Assessment "Course work 100%", Learning Outcomes "1,2,3")
+are filled in, matching the original exactly. Fields only the student can
+supply - **Name, Student ID, Study period, Lecturer, Topic of the Case
+Study, Word count, Due date/Time, and the signed Declaration** - remain
+blank for the student to complete, since inventing any of this on an
 official declaration would be a genuine correctness problem, not a
 convenience.
+
+### 1.4 Originality / plagiarism review
+
+Every section of `docs/ASSIGNMENT_REPORT.md` is original writing authored
+specifically to describe this project's actual implementation - not
+adapted or copied from any external template, tutorial, or prior
+coursework. As a good-faith, honest check (not a substitute for the
+University's own Turnitin run, which this session has no access to), six
+distinctive sentences were pulled from different sections of the report -
+spanning the introduction, the architecture rationale, a design-pattern
+critique, the testing-philosophy discussion, the JWT/cookie security
+rationale, and the double-booking business rule - and searched verbatim
+online. **None returned an exact match anywhere.** Two honest caveats
+worth knowing before submission:
+
+1. This was a spot-check of a handful of sentences, not an exhaustive
+   sentence-by-sentence scan of the whole ~7,000-word report - a real
+   Turnitin run remains the authoritative check, and is worth running
+   yourself once the cover sheet is filled in.
+2. The report **does** deliberately, properly quote the assignment brief
+   itself in a few places (e.g. §1.1's "Students are free to make
+   necessary assumptions...", always in quotation marks with the source
+   named) and cites six real external works in the References section
+   (Gamma et al., Fielding, RFC 7519, etc.) - Turnitin will correctly
+   flag these as quoted/cited matches against the brief PDF and those
+   publications, which is normal, expected, and not plagiarism; markers
+   routinely exclude properly quoted and bibliography material from a
+   similarity score, and it is worth confirming your Turnitin submission
+   settings do the same rather than expecting a literal 0% including
+   quotes.
 
 ---
 
