@@ -121,6 +121,10 @@ async function main() {
     page-break-inside: avoid;
     border: 0.75pt solid #ccc;
   }
+  /* The two cover-sheet page images are an exact, unmodified copy of the
+     university's own template - no added border/decoration, unlike the
+     diagram/screenshot images above which intentionally get a light frame. */
+  img[src*="cover-sheet-page"] { border: none; margin: 0 auto; }
   .pagebreak { page-break-after: always; }
 </style>
 </head>
