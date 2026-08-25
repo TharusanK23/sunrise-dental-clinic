@@ -57,7 +57,7 @@ async function main() {
     line-height: 1.5;
     color: #000;
   }
-  h1, h2, h3, h4, h5 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: "Times New Roman", Times, serif;
     font-size: 14pt;
     font-weight: bold;
@@ -69,19 +69,26 @@ async function main() {
   p, li { text-align: justify; }
   a { color: #0b3954; }
   hr { border: none; border-top: 0.75pt solid #999; margin: 14pt 0; }
+  /* Every element below is deliberately kept at the brief's exact spec -
+     12pt Times New Roman, 1.5 line spacing - with NO exceptions for
+     tables/blockquotes/inline code, since the brief states this plainly
+     for the whole document and tables are explicitly named as counted,
+     "normal" report content in the brief's word-count clause. Only figure
+     captions (img + em below) are kept as a smaller, conventional caption
+     style, since the brief's format spec targets the report's body text
+     and does not address figure/photo captions. */
   blockquote {
     border-left: 3pt solid #999;
     margin: 10pt 0;
     padding: 2pt 10pt;
     color: #333;
-    font-size: 11pt;
   }
   table {
     width: 100%;
     border-collapse: collapse;
     margin: 10pt 0;
-    font-size: 10pt;
-    line-height: 1.3;
+    font-size: 12pt;
+    line-height: 1.5;
   }
   th, td {
     border: 0.75pt solid #888;
@@ -91,8 +98,8 @@ async function main() {
   }
   th { background: #eef3f6; font-weight: bold; }
   code {
-    font-family: "Consolas", "Courier New", monospace;
-    font-size: 10pt;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12pt;
     background: #f2f2f2;
     padding: 1pt 3pt;
     border-radius: 2pt;
@@ -100,8 +107,8 @@ async function main() {
   pre {
     background: #f2f2f2;
     padding: 8pt;
-    font-size: 9.5pt;
-    line-height: 1.3;
+    font-size: 12pt;
+    line-height: 1.5;
     overflow-x: auto;
     page-break-inside: avoid;
   }
@@ -114,6 +121,7 @@ async function main() {
     page-break-inside: avoid;
     border: 0.75pt solid #ccc;
   }
+  .pagebreak { page-break-after: always; }
 </style>
 </head>
 <body>

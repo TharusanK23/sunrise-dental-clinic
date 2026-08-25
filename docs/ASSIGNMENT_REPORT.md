@@ -1,3 +1,73 @@
+# Assignment Cover Sheet
+
+*Reproduced from the university's "Assignment cover sheet.docx" template.
+Fields marked "to be completed by the student" must be filled in (and the
+declaration signed) before submission - they are intentionally left blank
+here rather than guessed.*
+
+**Student Details** *(student should fill the content)*
+
+| Field | Value |
+|---|---|
+| Name | *to be completed by the student* |
+| Student ID | 20374265 |
+
+**Scheduled Unit Details**
+
+| Field | Value |
+|---|---|
+| Unit code | CIS6003 |
+| Unit title | Advanced Programming |
+| Year | 3 |
+| Study period | *to be completed by the student* |
+| Lecturer | *to be completed by the student* |
+| Mode of delivery | Full Time |
+
+**Assignment Details**
+
+| Field | Value |
+|---|---|
+| Nature of the Assessment | Course work 100% |
+| Topic of the Case Study | Sunrise Dental Clinic System - Online Appointment & Patient Management System |
+| Learning Outcomes covered | 1, 2, 3 |
+| Word count | Approx. 6,970 (excluding references and appendices, per the brief's word-count rule) |
+| Due date / Time | *to be completed by the student* |
+| Extension granted? | No |
+| Extension Date | N/A |
+| Is this a resubmission? | No |
+| Resubmission Date | N/A |
+
+**Declaration**
+
+> I certify that the attached material is my original work. No other
+> person's work or ideas have been used without acknowledgement. Except
+> where I have clearly stated that I have used some of this material
+> elsewhere, I have not presented it for examination/assessment in any
+> other course or unit at this or any other institution.
+
+| Field | Value |
+|---|---|
+| Name/Signature | *to be signed by the student before submission* |
+| Date | *to be completed by the student* |
+
+**Submission**
+
+| Field | Value |
+|---|---|
+| Return to | *to be completed by the student* |
+
+**Result** *(for assessor use)*
+
+| Field | Value |
+|---|---|
+| Marks by 1st Assessor | |
+| Signature of the 1st Assessor | |
+| Agreed Mark | |
+| Marks by 2nd Assessor | |
+| Signature of the 2nd Assessor | |
+
+<div class="pagebreak"></div>
+
 # CIS6003 Advanced Programming — Assignment Report
 
 **Assessment:** Sunrise Dental Clinic System (WRIT1) | **Weighting:** 100%

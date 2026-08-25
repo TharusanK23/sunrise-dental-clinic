@@ -21,7 +21,7 @@ const {
     Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
     Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
     ImageRun, Header, Footer, PageNumber, ExternalHyperlink, VerticalAlign,
-    convertInchesToTwip, LevelFormat, TabStopType
+    convertInchesToTwip, LevelFormat, TabStopType, PageBreak
 } = require('docx');
 
 const DOCS_DIR = __dirname;
@@ -69,8 +69,10 @@ function inlineRuns(tokens, opts = {}) {
                 runs.push(...inlineRuns(t.tokens, { ...opts, italics: true }));
                 break;
             case 'codespan':
+                // Kept in the brief's Times New Roman / 12pt spec, not a
+                // monospace font - see the file-level note above blockToElements.
                 runs.push(new TextRun({
-                    text: t.text, font: MONO_FONT, size: BODY_SIZE - 2, ...opts,
+                    text: t.text, font: FONT, size: BODY_SIZE, ...opts,
                     shading: { type: ShadingType.SOLID, color: 'F2F2F2', fill: 'F2F2F2' }
                 }));
                 break;
@@ -158,18 +160,29 @@ function blockToElements(token, listDepth = 0) {
         }
 
         case 'table': {
+            // Table text is deliberately kept at the same 12pt / 1.5-line-spacing
+            // as the rest of the report - the brief's word-count clause names
+            // tables explicitly as counted, "normal" report content, so they
+            // follow the same "Normal 12pt" / 1.5 spacing rule, not a smaller
+            // condensed style.
             const headerCells = token.header.map(h => new TableCell({
                 shading: { type: ShadingType.SOLID, color: 'EEF3F6', fill: 'EEF3F6' },
                 verticalAlign: VerticalAlign.CENTER,
                 margins: { top: 60, bottom: 60, left: 80, right: 80 },
-                children: [new Paragraph({ children: inlineRuns(h.tokens, { bold: true, size: BODY_SIZE - 2 }) })]
+                children: [new Paragraph({
+                    spacing: { line: LINE_1_5, lineRule: 'auto' },
+                    children: inlineRuns(h.tokens, { bold: true, size: BODY_SIZE })
+                })]
             }));
             const rows = [new TableRow({ children: headerCells, tableHeader: true })];
             for (const row of token.rows) {
                 const cells = row.map(c => new TableCell({
                     verticalAlign: VerticalAlign.TOP,
                     margins: { top: 60, bottom: 60, left: 80, right: 80 },
-                    children: [new Paragraph({ children: inlineRuns(c.tokens, { size: BODY_SIZE - 2 }) })]
+                    children: [new Paragraph({
+                        spacing: { line: LINE_1_5, lineRule: 'auto' },
+                        children: inlineRuns(c.tokens, { size: BODY_SIZE })
+                    })]
                 }));
                 rows.push(new TableRow({ children: cells }));
             }
@@ -183,9 +196,9 @@ function blockToElements(token, listDepth = 0) {
             const lines = token.text.split('\n');
             return [new Paragraph({
                 shading: { type: ShadingType.SOLID, color: 'F2F2F2', fill: 'F2F2F2' },
-                spacing: { after: 160, line: 276, lineRule: 'auto' },
+                spacing: { after: 160, line: LINE_1_5, lineRule: 'auto' },
                 children: lines.flatMap((line, i) => {
-                    const run = new TextRun({ text: line || ' ', font: MONO_FONT, size: BODY_SIZE - 4 });
+                    const run = new TextRun({ text: line || ' ', font: FONT, size: BODY_SIZE });
                     return i < lines.length - 1 ? [run, new TextRun({ text: '', break: 1 })] : [run];
                 })
             })];
@@ -224,6 +237,15 @@ function blockToElements(token, listDepth = 0) {
             })];
 
         case 'space':
+            return [];
+
+        case 'html':
+            // Only recognised raw-HTML passthrough: an explicit page break
+            // marker (used once, after the cover sheet). Anything else is
+            // intentionally dropped rather than rendered as literal markup.
+            if (/class="pagebreak"/.test(token.raw)) {
+                return [new Paragraph({ children: [new PageBreak()] })];
+            }
             return [];
 
         default:

@@ -2,13 +2,14 @@
 
 **Module:** CIS6003 Advanced Programming (WRIT1) | **Student:** BSc SE – CIS-6003 – 20374265
 **Repository:** https://github.com/TharusanK23/sunrise-dental-clinic (public, branches `dev` and `release`, both green on CI)
-**Prepared:** 24 August 2026
+**Prepared:** 24 August 2026 | **Last updated:** 25 August 2026
 
 This document confirms, task by task against the assignment brief, what has
 been completed for the Sunrise Dental Clinic System coursework, lists the
-two most recent changes applied (staff credential rotation and explicit
-JWT-based authorization), and gives the exact file/URL locations for every
-piece of evidence referenced.
+most recent changes applied (staff credential rotation, explicit JWT-based
+authorization, and a full report-format validation with the official
+cover sheet added), and gives the exact file/URL locations for every piece
+of evidence referenced.
 
 ---
 
@@ -69,6 +70,55 @@ The automated suite grew from 25 to **26 tests, all passing** (see §3
 below); the corresponding test-count references were updated consistently
 across `TEST_PLAN.md`, `TEST_CASES.md`, `SETUP.md`, `ASSIGNMENT_REPORT.md`,
 `testing/evidence/`, and the tests-passing screenshot was recaptured.
+
+### 1.3 Report format validated against the brief, and the cover sheet added
+
+Every element of `docs/ASSIGNMENT_REPORT.md`'s PDF/DOCX export tooling
+(`generate-pdf.js`, `generate-docx.js`) was checked line-by-line against
+the brief's exact formatting clause and corrected where it deviated:
+
+| Brief requirement | Before | After |
+|---|---|---|
+| Paper size A4 | ✅ Already correct | Unchanged |
+| Margins 1.5in left / 1in right, top, bottom | ✅ Already correct | Unchanged |
+| Page numbers, bottom right | ✅ Already correct | Unchanged |
+| Line spacing 1.5, whole document | ❌ Tables used 1.3 | **Fixed** - tables now 1.5 like everything else |
+| Headings 14pt bold | ✅ Already correct | Unchanged |
+| Normal text 12pt | ❌ Tables (10-11pt) and inline code (10pt) were smaller | **Fixed** - tables, the report's one blockquote, and every inline `code` span are now 12pt |
+| Font face Times New Roman | ❌ Inline code used a monospace font (Consolas) | **Fixed** - the entire document, including every inline code span, is now Times New Roman throughout (verified: zero Consolas references remain in the generated `.docx` XML) |
+
+The only deliberate, documented exception is figure/diagram captions
+(the small italic text under each screenshot and diagram), kept at a
+smaller 10pt caption style - a universal, conventional academic
+formatting practice the brief's clause does not address, and distinct
+from the "Normal" running body text the clause targets. Every other
+change removes a genuine deviation.
+
+Verified structurally after regenerating both exports: the `.docx`'s raw
+XML shows `w:pgSz` = A4, `w:pgMar` = exactly 1440/1440/1440/2160 twips
+(1in/1in/1in/1.5in), the footer's page-number field is right-aligned,
+1,182 text runs at 12pt vs. only 51 at 14pt (headings) and 23 at 10pt
+(captions only), and zero remaining Consolas references. The PDF was
+visually re-inspected page by page via a headless-Chrome screenshot.
+
+**The official university cover sheet was also added as the report's
+first page(s).** `Assignment cover sheet.docx` (found at the
+OnlineVehicleReservation project root) was extracted and faithfully
+reproduced in Markdown - Student Details, Scheduled Unit Details,
+Assignment Details, Declaration, Submission, and Result sections - as the
+new opening of `docs/ASSIGNMENT_REPORT.md`, followed by an explicit page
+break so the report proper (§1 Introduction onward) still starts cleanly
+on its own page. Known fields were filled in (Student ID 20374265, Unit
+code CIS6003, Unit title Advanced Programming, Year 3, Mode of delivery
+Full Time, Nature of the Assessment "Course work 100%", Topic of the Case
+Study, Learning Outcomes covered 1/2/3, Word count ≈6,970 excluding
+references/appendices per the brief's own word-count rule, Extension
+granted "No", Is this a resubmission "No"). Fields only the student can
+supply - **Name, Study period, Lecturer, Due date/Time, and the signed
+Declaration** - are left explicitly marked "to be completed by the
+student" rather than guessed, since inventing a name or date on an
+official declaration would be a genuine correctness problem, not a
+convenience.
 
 ---
 
@@ -133,7 +183,7 @@ across `TEST_PLAN.md`, `TEST_CASES.md`, `SETUP.md`, `ASSIGNMENT_REPORT.md`,
 | Deliverable | Location |
 |---|---|
 | Assignment report (source) | `docs/ASSIGNMENT_REPORT.md` |
-| Assignment report (submission-ready exports) | `docs/ASSIGNMENT_REPORT.pdf`, `docs/ASSIGNMENT_REPORT.docx` — A4, margins 1.5in/1in, 1.5 line spacing, Times New Roman, 14pt bold headings, 12pt body, page numbers bottom-right, per the brief's exact format spec |
+| Assignment report (submission-ready exports) | `docs/ASSIGNMENT_REPORT.pdf`, `docs/ASSIGNMENT_REPORT.docx` — official cover sheet as page 1, then the report from its own page — A4, margins 1.5in/1in, 1.5 line spacing throughout (including tables), Times New Roman throughout (including inline code), 14pt bold headings, 12pt body, page numbers bottom-right; format validated and corrected per §1.3 |
 | Diagrams | `diagrams/` (7 diagrams: Use Case, Class, 3× Sequence, ER, Flowchart — Mermaid source + rendered PNGs) |
 | Database schema | `database/schema.sql` |
 | Backend source | `backend/src/main/java/com/sunrise/dentalclinic/` |
@@ -165,8 +215,20 @@ across `TEST_PLAN.md`, `TEST_CASES.md`, `SETUP.md`, `ASSIGNMENT_REPORT.md`,
 **All four tasks in the brief — A (UML design), B (interactive system,
 design patterns, architecture), C (testing), and D (Git/GitHub) — are
 complete**, built to the Excellent-band criteria with evidence for every
-row of the marking table (full mapping in
-`docs/ASSIGNMENT_REPORT.md` §6), plus the two specific changes requested
-in this session (credential rotation and explicit JWT bearer
-authorization) fully implemented, tested, documented, and pushed to both
-the `dev` and `release` branches with a green CI run.
+row of the marking table (full mapping in `docs/ASSIGNMENT_REPORT.md`
+§6). The credential rotation, explicit JWT bearer authorization, and the
+report-format validation/cover-sheet addition (§1) are all implemented,
+verified, and documented. **Outstanding before submission:** the report's
+cover sheet has five fields only the student can supply - Name, Study
+period, Lecturer, Due date/Time, and the signed Declaration (§1.3) - and,
+separately, an in-progress request to host the live system on Render is
+currently blocked on Render's own account requirement for a payment card
+on file (confirmed directly against Render's API; no card is charged for
+free-tier resources, but Render requires one before creating *any*
+resource, even free ones). The PostgreSQL migration, Flyway setup, and
+`render`-profile configuration this needs are already written and
+committed (`backend/src/main/resources/application-render.yml`,
+`backend/src/main/resources/db/migration/postgres/V1__init.sql`) so the
+deployment can proceed immediately once that one account-side step is
+done; only the `render.yaml` Blueprint (or the equivalent direct API
+calls) remains to be finished.
