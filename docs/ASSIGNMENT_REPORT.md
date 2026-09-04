@@ -879,17 +879,18 @@ Print-Bill, Dentists/Treatment-Types/Patients, database-level, Staff
 Accounts, and cross-cutting API contract), giving a direct, auditable line
 from "requirement" to "design" (Section 2/Section 3) to "proof" (Section 4).
 
-### 4.6 Full test case matrix (57 cases)
+### 4.6 Full test case matrix (59 cases)
 
 The condensed matrix below is reproduced in full from
 `testing/TEST_CASES.md` (rather than only summarised) so the complete
 evidence, including every failure/negative-path scenario, is visible
 directly in this report. **Type** legend: `POS` positive, `NEG` negative,
 `BND` boundary, `VAL` validation, `API` API contract, `DB` database-level,
-`INT` integration. Every row below states the scenario tested, how it was
-observed (which automated test method proved it, or which manual tool -
-Postman, curl, the MySQL CLI, or the live browser client - was used), and
-its final status.
+`INT` integration, `DEF` defect regression (a case that genuinely failed
+during development - see Section 4.6.1). Every row below states the
+scenario tested, how it was observed (which automated test method proved
+it, or which manual tool - Postman, curl, the MySQL CLI, or the live
+browser client - was used), and its final status.
 
 **Authentication**
 
@@ -987,6 +988,21 @@ its final status.
 | API-01 | API | Validation errors return a consistent, field-mapped shape | `GlobalExceptionHandler`, exercised by every `@Valid`-annotated endpoint | PASS |
 | API-02 | API | An unhandled resource-not-found returns 404, never 500 | `AppointmentServiceImplTest.rejectsUnknownDentist` | PASS |
 | API-03 | API | The health endpoint is reachable without authentication | Manual (curl, `docs/SETUP.md` Section 6.2) | PASS |
+
+#### 4.6.1 Defects found and fixed during development (genuine FAIL cases)
+
+Every case above passes in the system's current state. The two cases
+below are kept separate deliberately, because their **first** recorded
+result was a genuine **FAIL**, not a PASS - included honestly as real
+evidence of defects that were actually caught and fixed during
+development, rather than reporting only the tests that happened to
+succeed on their first attempt. Both are also discussed narratively in
+Section 4.4.
+
+| ID | Type | Description | First result | Root cause | Fix | Status now |
+|---|---|---|---|---|---|---|
+| DEF-01 | DEF | `AppointmentFlowIntegrationTest`'s second test method, run against the shared H2 context | **FAIL** - `DataIntegrityViolationException` on the seeded `kirisha` username | Both test methods shared the same Spring-managed H2 context; the second method's `@BeforeEach` tried to re-insert a username the first method's `@BeforeEach` had already committed | Annotated the test class `@Transactional`, so each test method's database changes roll back automatically once it completes | PASS |
+| DEF-02 | DEF | Submitting a wrong password on the login page served at the bare directory URL `docs/SETUP.md` documents | **FAIL** - the "Invalid username or password" alert never appeared; the page silently reloaded with both fields empty | `frontend/assets/js/api.js` decided "is this the login page, or an authenticated page" by checking whether `location.pathname` literally ends in `"/index.html"` - false at a bare directory URL, so the login endpoint's own 401 was mis-classified as a session-expired event and triggered an unwanted redirect | Aligned the check with the same test `computeLoginPath()` already used elsewhere in the file (`location.pathname.includes("/pages/")`) | PASS |
 
 ## 5. Task D - Git, GitHub & Version Control
 

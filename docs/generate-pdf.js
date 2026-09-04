@@ -68,6 +68,40 @@ function addHeadingIds(html) {
     return { html: out, headings };
 }
 
+/** Sizes every table's columns from that column's own typical content
+ *  length, instead of leaving table-layout: auto to size them - which
+ *  lets one unbreakable long cell (a dotted Java method name) force the
+ *  whole table wider than the page, silently pushing later columns off
+ *  the page edge entirely (found via a table's own "Status" column
+ *  disappearing). Mirrors the same fix already applied in generate-docx.js
+ *  for the same underlying reason, just via a <colgroup> since HTML/CSS
+ *  tables have no per-cell "width" API to set the way docx.js does. */
+function sizeTableColumns(html) {
+    return html.replace(/<table>([\s\S]*?)<\/table>/g, (full, inner) => {
+        const rows = [...inner.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map(rowMatch =>
+            [...rowMatch[1].matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g)]
+                .map(cellMatch => cellMatch[1].replace(/<[^>]+>/g, '').trim())
+        );
+        const colCount = Math.max(0, ...rows.map(r => r.length));
+        if (colCount < 2) return full;
+
+        const MIN_PCT = 9;
+        const weights = [];
+        for (let i = 0; i < colCount; i++) {
+            const lens = rows.map(r => (r[i] || '').length);
+            const avgLen = lens.reduce((a, b) => a + b, 0) / (lens.length || 1);
+            weights.push(Math.max(avgLen, 4));
+        }
+        const totalWeight = weights.reduce((a, b) => a + b, 0);
+        let pct = weights.map(w => Math.max((w / totalWeight) * 100, MIN_PCT));
+        const pctSum = pct.reduce((a, b) => a + b, 0);
+        pct = pct.map(p => ((p / pctSum) * 100).toFixed(2));
+
+        const colgroup = '<colgroup>' + pct.map(p => `<col style="width:${p}%">`).join('') + '</colgroup>';
+        return `<table style="table-layout:fixed">${colgroup}${inner}</table>`;
+    });
+}
+
 /** Builds a nested TOC <ul> from headings at depth 2-4 (the H1 is the
  *  report's own title, not a section to navigate to). `pageOf(id)`, if
  *  given, supplies the resolved page number to print after each entry
@@ -122,6 +156,7 @@ async function resolveTocPageNumbers(pdfPath, expectedCount) {
 async function buildAndPrint({ marked, puppeteer, pageOf } = {}) {
     let md = fs.readFileSync(MD_PATH, 'utf8');
     let bodyHtml = marked.parse(md);
+    bodyHtml = sizeTableColumns(bodyHtml);
 
     bodyHtml = bodyHtml.replace(/<img src="([^"]+)"/g, (m, src) => {
         if (/^https?:\/\//.test(src) || /^file:\/\//.test(src)) return m;
@@ -224,20 +259,10 @@ async function buildAndPrint({ marked, puppeteer, pageOf } = {}) {
     padding: 4pt 6pt;
     text-align: left;
     vertical-align: top;
-  }
-  /* One long unbroken token (a dotted Java method reference, a long URL)
-     refuses to wrap under the default table-layout: auto, forcing the
-     whole table wider than the page - which silently pushes later
-     columns (once, a table's own "Status" column) off the page edge
-     entirely rather than just looking cramped. Constraining just that
-     one column's width and letting it wrap is enough to fix the overflow
-     without flattening every column to the same forced width the way
-     table-layout: fixed would (which made every cell wrap so hard the
-     test tables became unreadable and the report ~12 pages longer). The
-     4th column is "How it was observed" in every 5-column test-result
-     table in this report - the one place these long identifiers appear. */
-  td:nth-child(4), th:nth-child(4) {
-    max-width: 260px;
+    /* Backstop for sizeTableColumns() below: even with a sane column
+       width assigned, one truly unbroken token (a dotted Java method
+       reference, a long URL) still needs permission to break mid-word
+       rather than forcing its column wider than assigned. */
     overflow-wrap: break-word;
     word-break: break-word;
   }
