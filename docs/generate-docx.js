@@ -21,7 +21,7 @@ const {
     Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
     Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
     ImageRun, Header, Footer, PageNumber, ExternalHyperlink, VerticalAlign,
-    convertInchesToTwip, LevelFormat, TabStopType, PageBreak
+    convertInchesToTwip, LevelFormat, TabStopType, PageBreak, TableLayoutType
 } = require('docx');
 
 const DOCS_DIR = __dirname;
@@ -111,6 +111,10 @@ function blockToElements(token, listDepth = 0) {
                 heading: headingLevelFor(Math.min(token.depth, 6)),
                 spacing: { before: 240, after: 120, line: LINE_1_5, lineRule: 'auto' },
                 border: token.depth === 1 ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: '0B3954' } } : undefined,
+                // keepNext ties a heading to the paragraph immediately after
+                // it, so Word never leaves a heading alone at the bottom of
+                // one page with its explanatory text starting on the next.
+                keepNext: true,
                 children: inlineRuns(token.tokens, { bold: true, size: HEADING_SIZE })
             })];
 
@@ -123,6 +127,10 @@ function blockToElements(token, listDepth = 0) {
             return [new Paragraph({
                 alignment: AlignmentType.JUSTIFIED,
                 spacing: { after: 160, line: LINE_1_5, lineRule: 'auto' },
+                // keepLines keeps every line of one paragraph together on the
+                // same page, rather than letting Word split it mid-paragraph
+                // across a page boundary.
+                keepLines: true,
                 children: inlineRuns(token.tokens)
             })];
 
@@ -147,6 +155,7 @@ function blockToElements(token, listDepth = 0) {
                     spacing: { after: 80, line: LINE_1_5, lineRule: 'auto' },
                     indent: { left: 420 + listDepth * 300, hanging: prefix ? 260 : 260 },
                     bullet: prefix ? undefined : { level: listDepth },
+                    keepLines: true,
                     children: prefix
                         ? [new TextRun({ text: prefix, font: FONT, size: BODY_SIZE }), ...inline]
                         : inline
@@ -165,9 +174,33 @@ function blockToElements(token, listDepth = 0) {
             // tables explicitly as counted, "normal" report content, so they
             // follow the same "Normal 12pt" / 1.5 spacing rule, not a smaller
             // condensed style.
-            const headerCells = token.header.map(h => new TableCell({
+            //
+            // Word distributes column widths evenly across a table with no
+            // explicit widths, which is fine for tables whose columns hold
+            // similarly-sized content but wraps short values (an ID like
+            // "AUTH-01", a status like "PASS") into an unreadable single
+            // character per line when a neighbouring column (a long test
+            // description, a dotted Java method name) needs far more room.
+            // Sizing each column from its own typical content length - not
+            // one hard-coded shape - fixes this generally, for every table
+            // in the report, not just the widest ones.
+            const colCount = token.header.length;
+            const colWeights = token.header.map((h, i) => {
+                const headerLen = (h.text || '').length;
+                const cellLens = token.rows.map(r => ((r[i] && r[i].text) || '').length);
+                const avgLen = cellLens.length ? cellLens.reduce((a, b) => a + b, 0) / cellLens.length : 0;
+                return Math.max(headerLen, avgLen, 4);
+            });
+            const totalWeight = colWeights.reduce((a, b) => a + b, 0);
+            const MIN_PCT = 11;
+            let colPct = colWeights.map(w => Math.max((w / totalWeight) * 100, MIN_PCT));
+            const pctSum = colPct.reduce((a, b) => a + b, 0);
+            colPct = colPct.map(p => Math.round((p / pctSum) * 10000) / 100); // 2dp, sums to ~100
+
+            const headerCells = token.header.map((h, i) => new TableCell({
                 shading: { type: ShadingType.SOLID, color: 'EEF3F6', fill: 'EEF3F6' },
                 verticalAlign: VerticalAlign.CENTER,
+                width: { size: colPct[i], type: WidthType.PERCENTAGE },
                 margins: { top: 60, bottom: 60, left: 80, right: 80 },
                 children: [new Paragraph({
                     spacing: { line: LINE_1_5, lineRule: 'auto' },
@@ -176,8 +209,9 @@ function blockToElements(token, listDepth = 0) {
             }));
             const rows = [new TableRow({ children: headerCells, tableHeader: true })];
             for (const row of token.rows) {
-                const cells = row.map(c => new TableCell({
+                const cells = row.map((c, i) => new TableCell({
                     verticalAlign: VerticalAlign.TOP,
+                    width: { size: colPct[Math.min(i, colCount - 1)], type: WidthType.PERCENTAGE },
                     margins: { top: 60, bottom: 60, left: 80, right: 80 },
                     children: [new Paragraph({
                         spacing: { line: LINE_1_5, lineRule: 'auto' },
@@ -187,7 +221,12 @@ function blockToElements(token, listDepth = 0) {
                 rows.push(new TableRow({ children: cells }));
             }
             return [
-                new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows }),
+                // layout: FIXED is required for Word to actually honour the
+                // per-column widths above - Word's default AUTOFIT layout
+                // silently recalculates every column from its own content
+                // instead, which is what produced unreadable single-letter-
+                // per-line wrapping in the ID/Type/Status columns before.
+                new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, layout: TableLayoutType.FIXED, rows }),
                 new Paragraph({ text: '', spacing: { after: 160 } })
             ];
         }
@@ -214,12 +253,22 @@ function blockToElements(token, listDepth = 0) {
                 return [
                     new Paragraph({
                         alignment: AlignmentType.CENTER,
-                        spacing: { before: 120, after: 60 },
+                        // Extra top spacing (vs. the previous 120) gives two
+                        // back-to-back figures (an image's caption immediately
+                        // followed by the next image, with no body text
+                        // between them) a visibly clear gap rather than
+                        // looking stacked together.
+                        spacing: { before: 240, after: 60 },
+                        // Keep the image tied to its own caption paragraph
+                        // (never split onto different pages from each other).
+                        keepNext: true,
+                        keepLines: true,
                         children: [new ImageRun({ data: buf, transformation: size, type: 'png' })]
                     }),
                     new Paragraph({
                         alignment: AlignmentType.CENTER,
-                        spacing: { after: 200 },
+                        spacing: { after: 240 },
+                        keepLines: true,
                         children: [new TextRun({ text: token.text || '', italics: true, size: BODY_SIZE - 4, font: FONT })]
                     })
                 ];

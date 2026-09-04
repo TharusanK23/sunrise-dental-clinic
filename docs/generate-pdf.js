@@ -195,7 +195,7 @@ async function buildAndPrint({ marked, puppeteer, pageOf } = {}) {
     page-break-after: avoid;
   }
   h1 { border-bottom: 1.5pt solid #0b3954; padding-bottom: 6pt; }
-  p, li { text-align: justify; }
+  p, li { text-align: justify; page-break-inside: avoid; }
   a { color: #0b3954; }
   hr { border: none; border-top: 0.75pt solid #999; margin: 14pt 0; }
   /* Every element below is deliberately kept at the brief's exact spec -
@@ -225,6 +225,22 @@ async function buildAndPrint({ marked, puppeteer, pageOf } = {}) {
     text-align: left;
     vertical-align: top;
   }
+  /* One long unbroken token (a dotted Java method reference, a long URL)
+     refuses to wrap under the default table-layout: auto, forcing the
+     whole table wider than the page - which silently pushes later
+     columns (once, a table's own "Status" column) off the page edge
+     entirely rather than just looking cramped. Constraining just that
+     one column's width and letting it wrap is enough to fix the overflow
+     without flattening every column to the same forced width the way
+     table-layout: fixed would (which made every cell wrap so hard the
+     test tables became unreadable and the report ~12 pages longer). The
+     4th column is "How it was observed" in every 5-column test-result
+     table in this report - the one place these long identifiers appear. */
+  td:nth-child(4), th:nth-child(4) {
+    max-width: 260px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
   th { background: #eef3f6; font-weight: bold; }
   code {
     font-family: "Times New Roman", Times, serif;
@@ -246,10 +262,17 @@ async function buildAndPrint({ marked, puppeteer, pageOf } = {}) {
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 10pt auto;
+    margin: 16pt auto;
     page-break-inside: avoid;
     border: 0.75pt solid #ccc;
   }
+  /* Two figures placed back-to-back (no text between them) need visibly
+     more separation than one figure's own top/bottom margin alone gives -
+     without this, adjacent margins collapse toward the smaller side and
+     the images can end up looking stacked with barely a gap. Markdown
+     wraps each standalone image in its own <p>, so the actual siblings
+     are the paragraphs, not the <img> tags themselves. */
+  p:has(> img) + p:has(> img) { margin-top: 28pt; }
   .pagebreak { page-break-after: always; }
 
   /* ---- Cover sheet (exact copy, no added border/decoration) ---- */

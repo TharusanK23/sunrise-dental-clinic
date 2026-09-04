@@ -54,12 +54,18 @@ async function apiRequest(path, { method = "GET", body, query } = {}) {
     }
 
     if (!response.ok) {
-        if (response.status === 401 && !location.pathname.endsWith("/index.html") && !location.pathname.endsWith("/frontend/")) {
+        // Only auto-redirect to the login page for a 401 on an *authenticated*
+        // page (anything under pages/) - never on the login page itself, or a
+        // failed login attempt there incorrectly force-reloads instead of
+        // showing the inline "Invalid username or password" alert. This must
+        // use the same test as computeLoginPath() below, not a literal
+        // "/index.html" suffix check, since the login page is also reachable
+        // at a bare directory URL (e.g. XAMPP's
+        // http://localhost/sunrise-dental-clinic-client/) whose pathname
+        // never literally ends in "/index.html".
+        if (response.status === 401 && location.pathname.includes("/pages/")) {
             sessionStorage.removeItem("sdc_user");
-            const isRoot = location.pathname === "/" || location.pathname.endsWith("/frontend/");
-            if (!isRoot) {
-                window.location.href = computeLoginPath();
-            }
+            window.location.href = computeLoginPath();
         }
         throw new ApiError(response.status, payload);
     }

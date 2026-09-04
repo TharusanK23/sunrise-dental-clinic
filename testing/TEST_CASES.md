@@ -21,6 +21,7 @@ manual pass against the real MySQL/XAMPP instance per `docs/SETUP.md` §7.
 | AUTH-05 | NEG | Protected endpoint rejects an anonymous request | GET `/api/appointments` with no cookie | `401 Unauthorized` | `AppointmentFlowIntegrationTest.protectedEndpointRequiresAuthentication` | PASS |
 | AUTH-06 | POS | Logout clears the session | POST `/api/auth/logout`, then GET `/api/auth/me` | `204` then `401` on the follow-up call | Manual (Postman sequence) | PASS |
 | AUTH-07 | API | `ADMIN`-only endpoint rejects `STAFF` | Logged in as `kirisha`, POST `/api/users` | `403 Forbidden` | Manual (Postman, role check) | PASS |
+| AUTH-10 | NEG | Login page shows an inline error, not a redirect/reload, on a wrong password | On the login page served at a bare directory URL (`http://localhost/sunrise-dental-clinic-client/`, per `docs/SETUP.md`), submit `kirisha`/`wrong-password` | The red "Invalid username or password" alert renders in place, fields keep their typed values, no navigation occurs | Manual (headless-browser walkthrough, `testing/screenshots/21-login-failed.png`) | PASS (after fix - see Section 4.4) |
 
 ## Register New Appointment
 
@@ -111,6 +112,6 @@ manual pass against the real MySQL/XAMPP instance per `docs/SETUP.md` §7.
 
 ---
 
-**Total automated test methods: 26** (run via `./mvnw test`; see
+**Total test cases: 57** (26 of them automated, run via `./mvnw test`; see
 `testing/evidence/` for the captured passing output and `TEST_PLAN.md` §4
 for how each level of this matrix maps to a tool).
